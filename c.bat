@@ -1,8 +1,9 @@
 @echo off
 
 set Configuration=Debug
-set TargetDir=build\bin\%Configuration%
 set BinaryName=cCompiler.exe
+
+set TargetDir=build\bin\%Configuration%
 set FullBinaryPath=%TargetDir%\%BinaryName%
 
 if not exist %FullBinaryPath% (
