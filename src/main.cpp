@@ -11,6 +11,8 @@
 #include <cc/logging.h>
 #include <cc/assert.h>
 
+#include <cc/parsing/asm_parser.h>
+
 cc::x86::instruction make_instruction(cc::x86::mnemonic op, cc::x86::gp_register reg, cc::u32 imm) {
 	return cc::x86::instruction::make_reg_imm_op(op, reg, imm);
 }
@@ -82,5 +84,9 @@ int main() {
 	obj.set_symbol_table(sym_table);
 	obj.write_to_file("data/obj2.obj");
 	
+	using namespace cc::parsing;
+
+	asm_file assembly_file = asm_file::from_file("data/test.asm");
+
 	return 0;
 }

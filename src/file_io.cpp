@@ -10,8 +10,9 @@ file::file(const std::string& filepath)
 	: m_filepath(filepath) {
 }
 
-cc::u8* file::read() {
-	std::FILE* file = std::fopen(m_filepath.c_str(), "rb");
+cc::u8* file::read(cc::file_type type) {
+	const char* mode = (type == cc::kFileModeBinary) ? "rb" : "r";
+	std::FILE* file = std::fopen(m_filepath.c_str(), mode);
 
 	if (file) {
 		m_exists = true;
@@ -33,8 +34,10 @@ cc::u8* file::read() {
 	}
 }
 
-void file::write(u8* data, size_t size) {
-	std::FILE *file = std::fopen(m_filepath.c_str(), "wb");
+void file::write(u8* data, size_t size, cc::file_type type) {
+	const char* mode = (type == cc::kFileModeBinary) ? "wb" : "w";
+
+	std::FILE *file = std::fopen(m_filepath.c_str(), mode);
 	
 	if (!file) {
 		CWARN("File {0} does not exist for writing. aborting write.", m_filepath);

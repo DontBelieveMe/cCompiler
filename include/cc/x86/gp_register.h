@@ -7,7 +7,7 @@ namespace cc {
 		class gp_register {
 		public:
 			gp_register(cc::u8 encoding);
-
+			gp_register(){}
 			static const gp_register eax;
 			static const gp_register ecx;
 			static const gp_register edx;
