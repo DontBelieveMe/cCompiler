@@ -25,12 +25,17 @@ cc::x86::instruction make_instruction(cc::x86::mnemonic op) {
 	return cc::x86::instruction::make_op(op);
 }
 
-int main() {
+int main(int argc, char** argv) {
 	using namespace cc::x86;
 	using namespace cc;
 	using namespace coff;
 	
 	cc::logger::startup();
+	
+	if(argc != 2) {
+		CFATAL("Invalid numer of arguments!");
+		return 1;
+	}
 
 	x86::instructions_collection instructions = {
 		make_instruction(kMov_r32imm32, gp_register::ecx, 5),
@@ -86,7 +91,7 @@ int main() {
 	
 	using namespace cc::parsing;
 
-	asm_file assembly_file = asm_file::from_file("data/test.asm");
+	asm_file assembly_file = asm_file::from_file(argv[1]);
 
 	return 0;
 }

@@ -3,51 +3,76 @@
 #include <cstring>
 #include <numeric>
 
+#include <cc/assert.h>
+
 using namespace cc::x86;
 
-/*
-	#todo (bwilks) - fix
+instruction_def::instruction_def(cc::u8 op, cc::size_t mod) 
+	: m_op(op), m_mods(mod) {
+}
 
-	There should be a better way of storing opcode data.
-	- Investigate how other compilers/assemblers do this.
-*/
-opcode instruction::m_opcodes[NUM_OPCODES] = {
-	opcode(0xB8, true, false, false, -1), //kMov_r32imm32
-	opcode(0x81, false, false, true, 0),  //kAdd_rm32imm32
-	opcode(0x8B, false, true, false, -1), //kMov_r32rm32
-	opcode(0xC3, false, false, false, -1), //kRet
-	opcode(0x03, false, true, false, -1), //kAdd_r32rm32
-	opcode(0x81, false, false, true, 5), //kSub_rm32imm32
-	opcode(0x2B, false, true, false, -1) //kSub_r32rm32
+std::unordered_map<cc::x86::mnemonic, cc::x86::instruction_def> cc::x86::instructions_map = {
+	{ kMov_r32imm32, instruction_def(0xB8, kInsMod_pRd | kInsMod_id) },
+	{ kMov_r32rm32,  instruction_def(0x8B, kInsMod_r) },
+
+	{ kAdd_rm32imm32, instruction_def(0x81, kInsMod_Ext0 | kInsMod_id) },
+	{ kAdd_r32rm32,   instruction_def(0x03, kInsMod_r) },
+
+	{ kRet, instruction_def(0xC3, kInsMod_None) },
+
+	{ kSub_rm32imm32, instruction_def(0x81, kInsMod_Ext5 | kInsMod_id) },
+	{ kSub_r32rm32,   instruction_def(0x2B, kInsMod_r) }
 };
 
-opcode::opcode(cc::u8 op, bool encodes_reg_in_opcode, bool uses_rm_and_reg, bool reg_is_extension, cc::u8 extension)
-	: m_opcode(op), 
-	m_encodes_reg_in_opcode(encodes_reg_in_opcode),
-	m_uses_rm_and_reg(uses_rm_and_reg), 
-	m_reg_is_extension(reg_is_extension), 
-	m_extension(extension) {}
+bool instruction_def::uses_extension_modifier() const {
+	return (m_mods & kInsMod_Ext0) || (m_mods & kInsMod_Ext1) ||
+		(m_mods & kInsMod_Ext2) || (m_mods & kInsMod_Ext3) ||
+		(m_mods & kInsMod_Ext4) || (m_mods & kInsMod_Ext5) ||
+		(m_mods & kInsMod_Ext6) || (m_mods & kInsMod_Ext7);
+}
+
+bool instruction_def::encodes_reg_in_opcode() const {
+	return (m_mods & kInsMod_pRb) || (m_mods & kInsMod_pRw) ||
+		(m_mods & kInsMod_pRd) || (m_mods & kInsMod_pRo);
+}
+
+cc::u8 instruction_def::get_extension_digit() const {
+	ASSERT(uses_extension_modifier(), "Cannot get extension code for a instruction that does not use an extension");
+
+	if(m_mods & kInsMod_Ext0) return 0;
+	if(m_mods & kInsMod_Ext1) return 1;
+	if(m_mods & kInsMod_Ext2) return 2;
+	if(m_mods & kInsMod_Ext3) return 3;
+	if(m_mods & kInsMod_Ext4) return 4;
+	if(m_mods & kInsMod_Ext5) return 5;
+	if(m_mods & kInsMod_Ext6) return 6;
+	if(m_mods & kInsMod_Ext7) return 7;
+
+	// SHOULD NOT HAPPEN. Should be caught by the assertions above.
+	ASSERT(false, "Invalid instruction modifier state, cannot get extension digit that should exist");
+	return 0xff;
+}
 
 instruction instruction::make_reg_imm_op(mnemonic op, const cc::x86::gp_register& reg, cc::u32 data) {
 	using namespace cc;
 
-	const opcode& kOpcodeData = m_opcodes[static_cast<size_t>(op)];
+	const instruction_def& kInstructionDefData = instructions_map[op];
 	const size_t kSizeofImmediateData = sizeof(u32);
 
 	bool has_mod_reg_rm_byte = false;
 	u8 mrrm = 0;
 	u8 opcode_byte_data = 0;
 
-	if (kOpcodeData.encodes_reg_in_opcode()) {
-		opcode_byte_data = kOpcodeData.primary_opcode() + reg.encoding();
+	if (kInstructionDefData.encodes_reg_in_opcode()) {
+		opcode_byte_data = kInstructionDefData.get_opcode() + reg.encoding();
 	}
 
-	if (kOpcodeData.reg_is_extension()) {
-		opcode_byte_data = kOpcodeData.primary_opcode();
+	if (kInstructionDefData.uses_extension_modifier()) {
+		opcode_byte_data = kInstructionDefData.get_opcode();
 
 		// #todo(bwilks). This shouldn't be hardcoded - as this only allows for direct addressing
 		const u8 mrrm_mod = 0xC0;
-		const u8 mrrm_reg = kOpcodeData.extension();
+		const u8 mrrm_reg = kInstructionDefData.get_extension_digit();
 		const u8 mrrm_rm = reg.encoding();
 
 		mrrm |= mrrm_mod | (mrrm_reg << 3) | mrrm_rm;
@@ -78,7 +103,7 @@ instruction instruction::make_reg_imm_op(mnemonic op, const cc::x86::gp_register
 }
 
 instruction instruction::make_2reg_op(mnemonic op, const cc::x86::gp_register& reg0, const cc::x86::gp_register& reg1) {
-	const opcode& kOpcodeData = m_opcodes[static_cast<cc::size_t>(op)];
+	const instruction_def& kOpcodeData = instructions_map[op];
 	
 	cc::u8 mod_reg_rm_byte = 0;
 	{
@@ -92,7 +117,7 @@ instruction instruction::make_2reg_op(mnemonic op, const cc::x86::gp_register& r
 	}
 
 	instruction final_ins;
-	final_ins.m_data[0] = kOpcodeData.primary_opcode();
+	final_ins.m_data[0] = kOpcodeData.get_opcode();
 	final_ins.m_data[1] = mod_reg_rm_byte;
 
 	// #todo(bwilks) - again fix hardcoded 1-byte opcode size.
@@ -106,7 +131,7 @@ instruction instruction::make_2reg_op(mnemonic op, const cc::x86::gp_register& r
 }
 
 instruction instruction::make_op(mnemonic op) {
-	const opcode& kOpcodeData = m_opcodes[static_cast<cc::size_t>(op)];
+	const instruction_def& kOpcodeData = instructions_map[op];
 	
 	// #todo (bwilks) - opcode size is fixed to one byte again.
 	const cc::size_t kSizeofOpcode = 1;
@@ -117,7 +142,7 @@ instruction instruction::make_op(mnemonic op) {
 	// hence the sizeof the instruction is the same as the size of the instruction
 	final_ins.m_size = kSizeofOpcode;
 	
-	final_ins.m_data[0] = kOpcodeData.primary_opcode();
+	final_ins.m_data[0] = kOpcodeData.get_opcode();
 	
 	return final_ins;
 }

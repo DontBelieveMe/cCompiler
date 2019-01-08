@@ -1,8 +1,0 @@
-
-- Writing to COFF files
-  - Write metadata
-  - Write section headers
-  - Write section data.
-	- Must include .text segment (to test out our new code generation)
-  - Try and link.
-  - Voila a programmable programming language (write ASM in C++ and compile to OBJ :D)

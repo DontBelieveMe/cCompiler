@@ -3,6 +3,8 @@
 #include <cc/stdlib.h>
 #include <cc/x86/gp_register.h>
 
+#include <unordered_map>
+
 // Instructions:
 //
 //   1-2		 0-1       0-1       0-4           0-4
@@ -12,41 +14,81 @@
 
 namespace cc {
 	namespace x86 {
-		enum mnemonic {
-			kMov_r32imm32 = 0,
-			kAdd_rm32imm32 = 1,
-			kMov_r32rm32 = 2,
-			kRet = 3,
-			kAdd_r32rm32 = 4,
-			kSub_rm32imm32 = 5,
-			kSub_r32rm32 = 6
+		enum instruction_modifier {
+			kInsMod_None = 0,
+
+			// ModR/M byte uses only the R/M portion
+			// and the reg portion contains an "extension number"
+			kInsMod_Ext0 = 1,
+			kInsMod_Ext1 = 1 << 1,
+			kInsMod_Ext2 = 1 << 2,
+			kInsMod_Ext3 = 1 << 3,
+			kInsMod_Ext4 = 1 << 4,
+			kInsMod_Ext5 = 1 << 5,
+			kInsMod_Ext6 = 1 << 6,
+			kInsMod_Ext7 = 1 << 7,
+			
+			// #todo (bwilks) fill in a description here
+			// when you understand it
+			kInsMod_RexW = 1 << 8,
+
+			// ModR/M byte contains a register operand and a r/m operand
+			kInsMod_r    = 1 << 9,
+			
+			// A value follows the opcode that may specify a code offset and
+			// maybe a new value for the code segment register
+			kInsMod_cb   = 1 << 10, 
+			kInsMod_cw   = 1 << 11, 
+			kInsMod_cd   = 1 << 12,
+			kInsMod_cp   = 1 << 13, 
+			kInsMod_co   = 1 << 14, 
+			kInsMod_ct   = 1 << 15,
+			
+			// Has immediate operand that follows the opcode, ModR/M or
+			// SIB bytes
+			kInsMod_ib   = 1 << 16, 
+			kInsMod_iw   = 1 << 17, 
+			kInsMod_id   = 1 << 18,
+			kInsMod_io   = 1 << 19,
+			
+			// Lower 3 bits of opcode byte is used to encode the register
+			// operand without  a ModR/M byte 
+			kInsMod_pRb  = 1 << 20, 
+			kInsMod_pRw  = 1 << 21, 
+			kInsMod_pRd  = 1 << 22,
+			kInsMod_pRo  = 1 << 23,
+			kInsMod_pI   = 1 << 24
 		};
-
-		struct opcode {
+		
+		enum mnemonic {
+			kMov_r32imm32,
+			kAdd_rm32imm32,
+			kMov_r32rm32,
+			kRet,
+			kAdd_r32rm32,
+			kSub_rm32imm32,
+			kSub_r32rm32
+		};
+		
+		class instruction_def {
 		public:
-			opcode(cc::u8 op, bool encodes_reg_in_opcode, bool uses_rm_and_reg, bool reg_is_extension, cc::u8 extension);
-
-			cc::u8 primary_opcode() const { return m_opcode; }
-
-			inline bool encodes_reg_in_opcode() const { return m_encodes_reg_in_opcode; }
-			inline bool uses_rm_and_reg()       const { return m_uses_rm_and_reg; }
-			inline bool reg_is_extension()      const { return m_reg_is_extension; }
-
-			cc::u8 extension() const { 
-				if (!m_reg_is_extension)
-					return -1;
-
-				return m_extension; 
-			}
+			instruction_def(cc::u8 op, cc::size_t mod);
+			instruction_def() {}
+			
+			cc::u8 get_opcode() const { return m_op; }
+			cc::size_t get_modifiers() const { return m_mods; }
+			
+			bool uses_extension_modifier() const;
+			bool encodes_reg_in_opcode() const;
+			
+			cc::u8 get_extension_digit() const;
 
 		private:
-			cc::u8 m_opcode;
-			bool m_encodes_reg_in_opcode;
-			bool m_uses_rm_and_reg;
-
-			bool m_reg_is_extension;
-			cc::u8 m_extension;
+			cc::u8 m_op;
+			cc::size_t m_mods;
 		};
+
+		extern std::unordered_map<mnemonic, instruction_def> instructions_map;
 
 		class instruction {
 		public:
@@ -60,8 +102,6 @@ namespace cc {
 			instruction_buffer& data() { return m_data; }
 
 		private:
-			static opcode m_opcodes[NUM_OPCODES];
-			
 			instruction_buffer m_data;
 			cc::size_t m_size;
 		};
