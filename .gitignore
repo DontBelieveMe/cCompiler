@@ -1,5 +1,5 @@
 build/
-
+*.swp
 *.sln
 *.vcxproj
 *.vcxproj.filters
