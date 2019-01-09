@@ -4,6 +4,7 @@
 #include <cc/parsing/asm_parser.h>
 
 #include <cc/logging.h>
+#include <cc/timing.h>
 
 int main(int argc, char** argv) {
 	using namespace cc::x86;
@@ -17,6 +18,10 @@ int main(int argc, char** argv) {
 		CFATAL("Invalid numer of arguments!");
 		return 1;
 	}
+	
+	cc::time_block program_pref([](float seconds){
+		CINFO("Program completed in {0}s", seconds);
+	});
 	
 	asm_file assembly_file = asm_file::from_file(argv[1]);
 

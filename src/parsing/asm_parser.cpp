@@ -1,12 +1,13 @@
 ﻿#include <cc/parsing/asm_parser.h>
+
 #include <cc/file_io.h>
 #include <cc/logging.h>
 #include <cc/assert.h>
+#include <cc/timing.h>
 
 #include <regex>
 #include <cctype>
 #include <unordered_map>
-#include <chrono>
 
 #include <cc/x86/gp_register.h>
 #include <cc/x86/instruction.h>
@@ -75,7 +76,9 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 	
 	cc::array<parse_instruction> instructions;
 	
-	auto start_time = std::chrono::high_resolution_clock::now();
+	cc::time_block scope_perf([&](float seconds){
+		CINFO("Parsed {0} lines in {1}s", current_line, seconds);
+	});
 
 	while(current_index < file_text.length()) {
 		while(file_text[current_index] == ' ' || file_text[current_index] == '\t') {
@@ -188,11 +191,6 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 	for(parse_instruction& ins : instructions) {
 		assembly_file.m_instructions.add(ins.gen_x86());
 	}
-	
-	auto end_time = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> delta_seconds = end_time - start_time;
-
-	CINFO("Parsing {0} lines took {1}s", current_line, delta_seconds.count());
 
 	return assembly_file;
 }
