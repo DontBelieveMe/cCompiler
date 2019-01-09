@@ -18,9 +18,11 @@ static std::unordered_map<cc::string, const cc::x86::gp_register*> s_reg_map = {
 	{ "eax", &cc::x86::gp_register::eax },
 	{ "ebx", &cc::x86::gp_register::ebx },
 	{ "ecx", &cc::x86::gp_register::ecx },
-	{ "edx", &cc::x86::gp_register::edx }
-	
-	// #todo (bwilks) -> fill the reset of these in
+	{ "edx", &cc::x86::gp_register::edx },
+	{ "esp", &cc::x86::gp_register::esp },
+	{ "ebp", &cc::x86::gp_register::ebp },
+	{ "esi", &cc::x86::gp_register::esi },
+	{ "edi", &cc::x86::gp_register::edi }
 };
 
 struct parse_instruction {
@@ -40,17 +42,17 @@ struct parse_instruction {
 	parse_instruction() {}
 	cc::x86::instruction gen_x86() {
 		using namespace cc::x86;
-		for(auto pair : instructions_map) {
-			instruction_def opcode = pair.second;
+		for(const auto& opcode_def_pair  : instructions_map) {
+			instruction_def opcode = opcode_def_pair.second;
 			if(std::strcmp(opcode.get_name(), op.c_str()) == 0){
 				if(opcode.get_operands_def() == operands_def) {
 					switch(operands_def) {
 					case kInsOps_rm32imm32:
-						return instruction::make_reg_imm_op(pair.first, reg1, imm2);
+						return instruction::make_reg_imm_op(opcode_def_pair.first, reg1, imm2);
 					case kInsOps_r32rm32:
-						return instruction::make_2reg_op(pair.first, reg1, reg2);
+						return instruction::make_2reg_op(opcode_def_pair.first, reg1, reg2);
 					case kInsOps_none:
-						return instruction::make_op(pair.first);
+						return instruction::make_op(opcode_def_pair.first);
 					}
 				}
 			}
@@ -60,6 +62,10 @@ struct parse_instruction {
 		return instruction::make_op(kNop);
 	}
 };
+
+static bool is_whitespace(char c) {
+	return c == ' ' || c == '\t';
+}
 
 asm_file asm_file::from_file(const cc::string& filepath) {
 	asm_file assembly_file;
@@ -81,7 +87,7 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 	});
 
 	while(current_index < file_text.length()) {
-		while(file_text[current_index] == ' ' || file_text[current_index] == '\t') {
+		while(is_whitespace(file_text[current_index])) {
 			current_index++;
 			current_col++;
 		}
@@ -126,7 +132,7 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 			ins.operands_def = cc::x86::kInsOps_none;	
 			
 			if(cchar == ' ') {
-				while(cchar == ' ' ||  cchar == '\t') cchar = file_text[++current_index];
+				while(is_whitespace(cchar)) cchar = file_text[++current_index];
 				
 				if(isalpha(cchar)) {
 					cc::string op1_name;
@@ -141,13 +147,13 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 				
 				ASSERT(!isdigit(cchar), "First operand cannot be a numeric literal!");
 				
-				while(cchar == ' ' || cchar == '\t')
+				while(is_whitespace(cchar))
 					cchar = file_text[++current_index];
 				
 				if(cchar == ',') {
 					cchar = file_text[++current_index];
 					
-					while(cchar == ' ' || cchar == '\t')
+					while(is_whitespace(cchar))
 						cchar = file_text[++current_index];
 	
 					cc::string op2;
@@ -165,7 +171,8 @@ asm_file asm_file::from_file(const cc::string& filepath) {
 					}
 				}
 			}
-
+			
+			// Skip to the end of the line
 			while(cchar != '\n') {
 				current_index++;
 				cchar = file_text[current_index];
