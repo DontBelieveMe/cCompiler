@@ -77,7 +77,7 @@ cc::array<cc::u8> symbol::write_to_buffer() {
 	ASSERT(name.uses_short_name(), "Symbol names must be <= 8 characters, so that the symbol name can always be encoded in the symbol table.");
 
 	cc::string name_str = name.get_short_name();
-
+	
 	std::memcpy(buffer.data(), name_str.data(), 8);
 	std::memcpy(buffer.data() + 8, &value, 4);
 	std::memcpy(buffer.data() + 12, &section_number, 2);
@@ -93,36 +93,67 @@ cc::array<cc::u8> symbol::write_to_buffer() {
 
 symbol symbol::from_buff(cc::u8* buff) {
 	symbol sym;
+	
+	// Symbol Name, Offset: 0, Size: 8
 	sym.name = symbol_name::from_buff(buff);
+	
+	// Value, Offset: 8, Size: 4
+	// How this value is interpreted depends on the Section Number and
+	// the Storage Class of this symbol. Typically it is the relocatable
+	// address.
 	std::memcpy(&sym.value, buff + 8, 4);
-	std::memcpy(&sym.section_number, buff + 12, 2);
-	u16 t = 0;
-	std::memcpy(&t, buff + 14, 2);
-	sym.type = symbol_type(t);
 
+	// Section Number, Offset: 12, Size: 2
+	// 1-based index into the section table, to denote the section this
+	// symbol belongs to.
+	// Some values have special meaning (defined in 5.4.2 PE Format MSDN Documentation)
+	std::memcpy(&sym.section_number, buff + 12, 2);
+	
+	// Type, Offset: 14, Size 2
+	cc::u16 symbol_type_tmp = 0;
+	std::memcpy(&symbol_type_tmp, buff + 14, 2);
+	sym.type = symbol_type(symbol_type_tmp);
+
+	// Storage Class, Offset: 16, Size: 1
 	std::memcpy(&sym.storage_clss, buff + 16, 1);
+
+	// Number Of Preceding Auxillary Records, Offset: 17, Size: 1
 	std::memcpy(&sym.number_of_aux_symbols, buff + 17, 1);
 	
 	return sym;
 }
 
 symbol_table::symbol_table(cc::u8* read_buff, cc::u32 nsymbols) {
+	const cc::u32 kSymbolRecordSize = 18; // bytes
+	
 	m_symbols.reserve(nsymbols);
-	cc::u32 aux = 0;
-	cc::u32 offset = 0;
+	
+	cc::u32 aux_records_since_last_normal_record = 0;
+	cc::u32 symbol_record_offset = 0;
+
 	for (cc::u32 i = 0; i < nsymbols; ++i) {
-		bool is_aux = false;
-		if (aux > 0) {
-			aux--;
-			is_aux = true;
+		bool is_aux_record = false;
+		
+		// Check if this is an auxillary record
+		if (aux_records_since_last_normal_record > 0) {
+			aux_records_since_last_normal_record--;
+			is_aux_record = true;
 		}
-		symbol sym = symbol::from_buff(read_buff + offset);
-		sym.is_aux = is_aux;
-		if (sym.number_of_aux_symbols > 0)
-			aux = sym.number_of_aux_symbols;
+		
+		symbol sym = symbol::from_buff(read_buff + symbol_record_offset);
+		sym.is_aux = is_aux_record;
+		
+		// If this record has any preceding auxillary records then, store how many
+		// so we can identify if a record is auxillary or not.
+		if (sym.number_of_aux_symbols > 0) {
+			aux_records_since_last_normal_record = sym.number_of_aux_symbols;
+		}
 
 		m_symbols.push_back(sym);
-		offset += 18;
+
+		// Advance the offset into the symbol table so we are reading
+		// the next record on the next iteration.
+		symbol_record_offset += kSymbolRecordSize;
 	}
 }
 
