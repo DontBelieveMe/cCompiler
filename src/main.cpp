@@ -1,29 +1,9 @@
-#include <iostream>
-
-#include <cc/file_io.h>
 #include <cc/coff/object_file.h>
-#include <cc/mem_utils.h>
-#include <cc/x86/instruction.h>
-
-#include <time.h>
-
 #include <cc/coff/symbols.h>
-#include <cc/logging.h>
-#include <cc/assert.h>
 
 #include <cc/parsing/asm_parser.h>
 
-cc::x86::instruction make_instruction(cc::x86::mnemonic op, cc::x86::gp_register reg, cc::u32 imm) {
-	return cc::x86::instruction::make_reg_imm_op(op, reg, imm);
-}
-
-cc::x86::instruction make_instruction(cc::x86::mnemonic op, cc::x86::gp_register reg1, cc::x86::gp_register reg2) {
-	return cc::x86::instruction::make_2reg_op(op, reg1, reg2);
-}
-
-cc::x86::instruction make_instruction(cc::x86::mnemonic op) {
-	return cc::x86::instruction::make_op(op);
-}
+#include <cc/logging.h>
 
 int main(int argc, char** argv) {
 	using namespace cc::x86;
