@@ -7,21 +7,26 @@
 
 using namespace cc::x86;
 
-instruction_def::instruction_def(cc::u8 op, cc::size_t mod) 
-	: m_op(op), m_mods(mod) {
+instruction_def::instruction_def(cc::u8 op, cc::size_t mod, const char* name, instruction_operands_def operands_def) 
+	: m_op(op), m_mods(mod), m_name(name), m_operands_def(operands_def) {
+}
+
+const char* instruction_def::get_name() const {
+	return m_name;
 }
 
 std::unordered_map<cc::x86::mnemonic, cc::x86::instruction_def> cc::x86::instructions_map = {
-	{ kMov_r32imm32, instruction_def(0xB8, kInsMod_pRd | kInsMod_id) },
-	{ kMov_r32rm32,  instruction_def(0x8B, kInsMod_r) },
+	{ kMov_r32imm32, instruction_def(0xB8, kInsMod_pRd | kInsMod_id, "mov", kInsOps_rm32imm32) },
+	{ kMov_r32rm32,  instruction_def(0x8B, kInsMod_r, "mov", kInsOps_r32rm32) },
 
-	{ kAdd_rm32imm32, instruction_def(0x81, kInsMod_Ext0 | kInsMod_id) },
-	{ kAdd_r32rm32,   instruction_def(0x03, kInsMod_r) },
+	{ kAdd_rm32imm32, instruction_def(0x81, kInsMod_Ext0 | kInsMod_id, "add", kInsOps_rm32imm32) },
+	{ kAdd_r32rm32,   instruction_def(0x03, kInsMod_r, "add", kInsOps_r32rm32) },
 
-	{ kRet, instruction_def(0xC3, kInsMod_None) },
+	{ kRet, instruction_def(0xC3, kInsMod_None, "ret", kInsOps_none) },
+	{ kNop, instruction_def(0x90, kInsMod_None, "nop", kInsOps_none) },
 
-	{ kSub_rm32imm32, instruction_def(0x81, kInsMod_Ext5 | kInsMod_id) },
-	{ kSub_r32rm32,   instruction_def(0x2B, kInsMod_r) }
+	{ kSub_rm32imm32, instruction_def(0x81, kInsMod_Ext5 | kInsMod_id, "sub", kInsOps_rm32imm32) },
+	{ kSub_r32rm32,   instruction_def(0x2B, kInsMod_r, "sub", kInsOps_r32rm32) }
 };
 
 bool instruction_def::uses_extension_modifier() const {

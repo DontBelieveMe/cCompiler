@@ -1,7 +1,12 @@
-.text
+; This is an assembly file
+; Barney Wilks, cCompilerASM v1.0 test file
+; tbh this is just to test comments really :D
 
-; this is a comment
-mov eax, 20
-add eax, 50
+.text ; Begin the .text (code) section
+
+mov ebx, 3
+mov ecx, 67
+mov eax, ebx
+add eax, ecx
 ret
 

@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
 	using namespace cc::x86;
 	using namespace cc;
 	using namespace coff;
+	using namespace cc::parsing;
 	
 	cc::logger::startup();
 	
@@ -36,18 +37,8 @@ int main(int argc, char** argv) {
 		CFATAL("Invalid numer of arguments!");
 		return 1;
 	}
-
-	x86::instructions_collection instructions = {
-		make_instruction(kMov_r32imm32, gp_register::ecx, 5),
-		make_instruction(kAdd_rm32imm32, gp_register::ecx, 15),
-		make_instruction(kMov_r32imm32, gp_register::ebx, 3),
-		make_instruction(kAdd_r32rm32, gp_register::ebx, gp_register::ecx),
-		make_instruction(kMov_r32rm32, gp_register::eax, gp_register::ebx),
-		make_instruction(kSub_rm32imm32, gp_register::eax, 10),
-		make_instruction(kMov_r32imm32, gp_register::ebx, 4),
-		make_instruction(kSub_r32rm32, gp_register::eax, gp_register::ebx),
-		make_instruction(kRet)
-	};
+	
+	asm_file assembly_file = asm_file::from_file(argv[1]);
 
 	u32 characteristics = coff::kImageScnAlign16Bytes | 
 		coff::kImageScnMemExecute | 
@@ -57,7 +48,7 @@ int main(int argc, char** argv) {
 	shared_ptr<coff::section> section = make_shared<coff::section>();
 	section->set_name(".text$mn")
 		.set_characteristics(characteristics)
-		.set_raw_data(instructions.combine());
+		.set_raw_data(assembly_file.get_instructions().combine());
 	
 	coff::object_file obj;
 	obj.set_machine(coff::kMachinei386)
@@ -89,9 +80,5 @@ int main(int argc, char** argv) {
 	obj.set_symbol_table(sym_table);
 	obj.write_to_file("data/obj2.obj");
 	
-	using namespace cc::parsing;
-
-	asm_file assembly_file = asm_file::from_file(argv[1]);
-
 	return 0;
 }

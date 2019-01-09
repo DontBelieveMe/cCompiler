@@ -10,8 +10,6 @@
 //   1-2		 0-1       0-1       0-4           0-4
 // [OpCode] [Mod-Reg-R/M] [SIB] [Displacement] [Immediate]
 
-#define NUM_OPCODES 7
-
 namespace cc {
 	namespace x86 {
 		enum instruction_modifier {
@@ -66,13 +64,20 @@ namespace cc {
 			kMov_r32rm32,
 			kRet,
 			kAdd_r32rm32,
+			kNop,
 			kSub_rm32imm32,
 			kSub_r32rm32
 		};
 		
+		enum instruction_operands_def {
+			kInsOps_rm32imm32 = 0,
+			kInsOps_r32rm32 = 1,
+			kInsOps_none = 2
+		};
+
 		class instruction_def {
 		public:
-			instruction_def(cc::u8 op, cc::size_t mod);
+			instruction_def(cc::u8 op, cc::size_t mod, const char* name, instruction_operands_def operands_def);
 			instruction_def() {}
 			
 			cc::u8 get_opcode() const { return m_op; }
@@ -82,10 +87,13 @@ namespace cc {
 			bool encodes_reg_in_opcode() const;
 			
 			cc::u8 get_extension_digit() const;
-
+			const char* get_name() const;
+			instruction_operands_def get_operands_def() const { return m_operands_def; }
 		private:
 			cc::u8 m_op;
 			cc::size_t m_mods;
+			const char* m_name;
+			instruction_operands_def m_operands_def;
 		};
 
 		extern std::unordered_map<mnemonic, instruction_def> instructions_map;
