@@ -1,6 +1,8 @@
 #include <cc/coff/object_file.h>
 #include <cc/coff/symbols.h>
 
+#include <cc/x86/function.h>
+
 #include <cc/parsing/asm_parser.h>
 
 #include <cc/logging.h>
@@ -11,7 +13,7 @@ int main(int argc, char** argv) {
 	using namespace cc;
 	using namespace coff;
 	using namespace cc::parsing;
-	
+
 	cc::logger::startup();
 	
 	if(argc != 2) {
@@ -23,8 +25,10 @@ int main(int argc, char** argv) {
 		CINFO("Program completed in {0}s", seconds);
 	});
 	
+	function func = function::make_function("main");
 	asm_file assembly_file = asm_file::from_file(argv[1]);
-
+	func.add_instructions(assembly_file.get_instructions().get_array());	
+	
 	u32 characteristics = coff::kImageScnAlign16Bytes | 
 		coff::kImageScnMemExecute | 
 		coff::kImageScnCntCode | 

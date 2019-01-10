@@ -183,6 +183,10 @@ cc::array<cc::u8> instructions_collection::combine() {
 	return instructions_buffer;
 }
 
+void instructions_collection::add(const cc::array<instruction>& instructions) {
+	m_instructions.insert(m_instructions.end(), instructions.begin(), instructions.end());
+}
+
 void instructions_collection::add(const instruction& ins) {
 	m_instructions.push_back(ins);
 }

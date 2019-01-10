@@ -121,9 +121,9 @@ namespace cc {
 
 			cc::array<cc::u8> combine();
 			void add(const instruction& ins);
-			
+			void add(const cc::array<instruction>& instructions);	
 			typedef cc::array<instruction> arr_type;
-
+			arr_type& get_array() { return m_instructions; }
 			arr_type::iterator begin() { return m_instructions.begin(); }
 			arr_type::const_iterator cbegin() const { return m_instructions.cbegin(); }
 
