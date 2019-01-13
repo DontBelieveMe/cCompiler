@@ -19,11 +19,16 @@ namespace cc {
 
 		class token {
 		public:
-			token(token_type type, char *data, cc::size_t data_length);
+			token(token_type type, char *data, cc::size_t data_length, cc::size_t line, cc::size_t col);
 			token() {}
 			
 			void set_type(token_type t) {
 				m_type = t;
+			}
+
+			void set_line_col(cc::size_t line, cc::size_t col) {
+				m_line = line;
+				m_col = col;
 			}
 
 			void set_data(char* dat) {
@@ -32,6 +37,14 @@ namespace cc {
 
 			void set_data_length(cc::size_t len) {
 				m_data_length = len;
+			}
+
+			cc::size_t get_line() const {
+				return m_line;
+			}
+			
+			cc::size_t get_col() const {
+				return m_col;
 			}
 
 			token_type get_type() const {
@@ -50,6 +63,7 @@ namespace cc {
 			token_type m_type;
 			char* m_data;
 			cc::size_t m_data_length;
+			cc::size_t m_line, m_col;
 		};
 
 		class asm_parser {

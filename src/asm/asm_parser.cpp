@@ -14,8 +14,8 @@
 
 using namespace cc::assembly;
 
-token::token(token_type type, char* data, cc::size_t data_length)
-	: m_type(type), m_data(data), m_data_length(data_length) {
+token::token(token_type type, char* data, cc::size_t data_length, cc::size_t line, cc::size_t col)
+	: m_type(type), m_data(data), m_data_length(data_length), m_line(line), m_col(col) {
 }
 
 // These need to be pointers to the registers because, this static array
@@ -110,14 +110,14 @@ token asm_parser::parse_error_here(const cc::string& msg) {
 	}
 	CFATAL("\t{0}", line2);
 	
-	return token(kTok_EOF, nullptr, 0);
+	return token(kTok_EOF, nullptr, 0, m_cline, m_ccol);
 }
 
 token asm_parser::parse_next_token() {
 	if(current_char() == '\n') {
 		char* start = &m_text[m_cindex];
 		advance_char();
-		return token(kTok_Newline, start, 1);
+		return token(kTok_Newline, start, 1, m_cline, m_ccol);
 	}
 
 	char cur_char = next_non_whitespace_char();
@@ -132,7 +132,7 @@ token asm_parser::parse_next_token() {
 	if(current_char() == '\n') {
 		char* start = &m_text[m_cindex];
 		advance_char();
-		return token(kTok_Newline, start, 1);
+		return token(kTok_Newline, start, 1, m_cline, m_ccol);
 	}
 
 	cur_char = next_non_whitespace_char();
@@ -153,6 +153,7 @@ token asm_parser::parse_next_token() {
 		
 		tok.set_data(start);
 		tok.set_data_length(len);
+		tok.set_line_col(m_cline, m_ccol);
 
 		return tok;
 	}
@@ -166,13 +167,13 @@ token asm_parser::parse_next_token() {
 			cur_char = advance_char();
 		}
 
-		return token(kTok_Identifier, start, len);
+		return token(kTok_Identifier, start, len, m_cline, m_ccol);
 	}
 
 	if(cur_char == ',') {
 		char* start = &m_text[m_cindex];
 		cur_char = advance_char();
-		return token(kTok_Comma, start, 1);
+		return token(kTok_Comma, start, 1, m_cline, m_ccol);
 	}
 
 	if(isdigit(cur_char)) {
@@ -183,14 +184,14 @@ token asm_parser::parse_next_token() {
 			cur_char = advance_char();
 		}
 
-		return token(kTok_IntLiteral, start, len);
+		return token(kTok_IntLiteral, start, len, m_cline, m_ccol);
 	}
 		
 	if(cur_char != '\0') {
 		parse_error_here(cc::format_string("Invalid character '{0}'", cur_char));	
 	}
 
-	return token(kTok_EOF, &m_text[0], 1);
+	return token(kTok_EOF, &m_text[0], 1, m_cline, m_ccol);
 }
 
 char asm_parser::current_char() {
@@ -220,131 +221,6 @@ asm_parser asm_parser::from_file(const cc::string& filepath) {
 		
 	asm_parser assembly_file(std::move(file_text));
 	
-	return assembly_file;
-	/*	
-	cc::size_t current_line = 1;
-	cc::size_t current_col = 1;
-	cc::size_t current_index = 0;
-	
-	cc::array<parse_instruction> instructions;
-	
-	cc::time_block scope_perf([&](float seconds){
-		CINFO("Parsed {0} lines in {1}s", current_line, seconds);
-	});
-
-	while(current_index < file_text.length()) {
-		while(is_whitespace(file_text[current_index])) {
-			current_index++;
-			current_col++;
-		}
-
-		char cchar = file_text[current_index];
-		
-		// parsing section identifier
-		if(cchar == '.') {
-			cc::string section_name;
-			current_index++;
-			cchar = file_text[current_index];
-			
-			while(isalpha(cchar)) {
-				section_name += cchar;
-				current_index++;
-				cchar = file_text[current_index];
-			}
-
-			current_col += section_name.length();
-		}
-		
-		if(cchar == ';') {
-			while(cchar != '\n') {
-				current_index++;
-				cchar = file_text[current_index];
-			}
-		}
-
-		// parsing instruction
-		if(isalpha(cchar)) {
-			cc::string ins_name;
-			parse_instruction ins;
-
-			const char* start_ptr = &file_text[current_index];
-			
-			while(isalpha(cchar)) {
-				ins_name += cchar;
-				current_index++;
-				cchar = file_text[current_index];
-			}
-
-			ins.operands_def = cc::x86::kInsOps_none;	
-			
-			if(cchar == ' ') {
-				while(is_whitespace(cchar)) cchar = file_text[++current_index];
-				
-				if(isalpha(cchar)) {
-					cc::string op1_name;
-					
-					while(isalpha(cchar)) {
-						op1_name += cchar;
-						cchar = file_text[++current_index];
-					}
-			
-					ins.reg1 = *s_reg_map[op1_name];
-				}
-				
-				ASSERT(!isdigit(cchar), "First operand cannot be a numeric literal!");
-				
-				while(is_whitespace(cchar))
-					cchar = file_text[++current_index];
-				
-				if(cchar == ',') {
-					cchar = file_text[++current_index];
-					
-					while(is_whitespace(cchar))
-						cchar = file_text[++current_index];
-	
-					cc::string op2;
-					while(cchar != '\n') {
-						op2 += cchar;
-						cchar = file_text[++current_index];
-					}
-
-					if(isdigit(op2[0])) {
-						ins.imm2 = std::stoi(op2);
-						ins.operands_def = cc::x86::kInsOps_rm32imm32;
-					} else  {
-						ins.reg2 = *s_reg_map[op2];
-						ins.operands_def = cc::x86::kInsOps_r32rm32;
-					}
-				}
-			}
-			
-			// Skip to the end of the line
-			while(cchar != '\n') {
-				current_index++;
-				cchar = file_text[current_index];
-			}
-
-			ins.op = ins_name;
-			instructions.push_back(ins);
-			
-			const char* end_ptr = &file_text[current_index];
-			current_col += end_ptr  - start_ptr;
-		}
-
-		if(cchar == '\n') {
-			current_line++;
-			current_col = 1;
-		} else {
-			current_col++;
-		}
-
-		current_index++;
-	}
-
-	for(parse_instruction& ins : instructions) {
-		assembly_file.m_instructions.add(ins.gen_x86());
-	}
-	*/
 	return assembly_file;
 }
 
