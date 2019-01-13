@@ -1,0 +1,130 @@
+---
+Example ECX language.
+---
+
+// Single line comments like this
+/*
+	Multiline
+	comments like this
+*/
+
+import <math>
+import <containers>
+import <io>
+
+int AddTwoNumbers(int a, int b) {
+	return a + b;
+}
+
+int Pow2(int a) {
+	// `std` is a namespace imported from <math> that contains the `Pow`
+	return std::Pow(a, 2);
+}
+
+int InlineAssembly() {
+	asm {
+		mov ecx, 20
+		mov ebx, 40
+		add ebx, ecx
+		move eax, ebx
+	}
+}
+
+void MemoryExamples() {
+	int a = 123;
+	
+	unsafe {	
+		int* ptrToA = &a;
+		int* thisIsNull = nullptr;
+	}
+
+	int& ptrRef = f; 
+}
+
+void ConstantsExample() {
+	const std::string PLAYER_NAME = "Bob Jones";
+}
+
+void CastingExample() {
+	// No implicit cast'...
+	
+	float b = 1.23f;
+	int a = cast<float>(b);
+}
+
+void ArraysExample() {
+	// An array on the stack
+	// Fixed in size.
+	int[] anArray = {
+		10, 20, 30, 40
+	};
+
+	int size = anArray.size();
+
+	std::list<int> dynamicList;
+	dynamicList.add(123);
+	dynamicList.add(32);
+
+	int secondElement = dynamicList[1];
+}
+
+namespace my_namespace {
+	class Shape {
+	public:
+		Shape() {
+			std::printf("This is the constructor");
+		}
+		
+		void SetSize(int w, int h) {
+			mSize = w * h;
+		}
+
+		void PrintSize() {
+			std::printf("Shape size is %i\n", mSize);
+		}
+
+	private:
+		int mSize;
+		u32 mColour;
+	} // note does not need trailing ;
+
+	bool HasName(std::list<std::string> names, std::string lookFor) {
+		foreach(std::string name in names) {
+			if (name == lookFor) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
+int main() {
+	// This is a local function
+	int multiply(int a, int b) {
+		return a * b;
+	}
+
+	int signedInteger = -2324;
+	int mulTest = multiply(123, signedInteger);
+	
+	bool boolean = true;
+
+	// Fixed size types available (u8, s8, u16, s16, u32, s32, u64, s64)
+	u32 unsigned32bitNumber = 123123123;
+	
+	// sizeof(char) != sizeof(u8).
+	// char can hold unicode.
+	char c = 'A';
+	
+	if(signedInteger < 0) {
+		std::printf("Signed integer is smaller than 0!\n");
+	}
+	
+	// my_namespace is the namespace the Shape class is declared in
+	my_namespace::Shape shape();
+	shape.SetSize(10, 10);
+	shape.PrintSize();
+
+	return 0;
+}

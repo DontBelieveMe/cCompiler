@@ -3,7 +3,7 @@
 
 #include <cc/x86/function.h>
 
-#include <cc/parsing/asm_parser.h>
+#include <cc/asm/asm_file.h>
 
 #include <cc/logging.h>
 #include <cc/timing.h>
@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
 	using namespace cc::x86;
 	using namespace cc;
 	using namespace coff;
-	using namespace cc::parsing;
+	using namespace cc::assembly;
 
 	cc::logger::startup();
 	
@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
 		CINFO("Program completed in {0}s", seconds);
 	});
 	
-	function func = function::make_function("main");
-	asm_file assembly_file = asm_file::from_file(argv[1]);
-	func.add_instructions(assembly_file.get_instructions().get_array());	
+	asm_file source_file(argv[1]);
+
+	/*func.add_instructions(assembly_file.get_instructions().get_array());	
 	
 	u32 characteristics = coff::kImageScnAlign16Bytes | 
 		coff::kImageScnMemExecute | 
@@ -68,6 +68,6 @@ int main(int argc, char** argv) {
 
 	obj.set_symbol_table(sym_table);
 	obj.write_to_file("data/obj2.obj");
-	
+	*/	
 	return 0;
 }

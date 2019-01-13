@@ -3,9 +3,8 @@
 ; tbh this is just to test comments really :D
 
 .text ; Begin the .text (code) section
-
 mov ebx, 9
-mov ecx, 67
+mov ecx, 67 
 mov eax, ebx
 add eax, ecx
 ret

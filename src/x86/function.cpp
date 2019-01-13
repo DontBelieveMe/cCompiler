@@ -2,9 +2,10 @@
 
 using namespace cc::x86;
 
-function function::make_function(const cc::string& name) {
+function function::make_function(const cc::string& name, cc::u32 func_attribs) {
 	function func;
 	func.m_name = name;
+	func.m_attribs = func_attribs;
 
 	return func;
 }
