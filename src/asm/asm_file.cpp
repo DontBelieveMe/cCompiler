@@ -10,8 +10,24 @@ using namespace cc::assembly;
 struct parser_state {
 	asm_parser* parser;
 	token current_token;
-	cc::array<ast_section*> *sections;
 };
+
+// #todo (bwilks) -> FIX. We need some better way of accessing file text
+// This is needed as error can occur during code generation (based off the AST)
+// and it is useful to have line numbers and so forth pointing to the offending
+// instruction
+// 
+// Possible fix -> implement semantic validation stage - after AST has been created
+// go over the AST and check if it makes sense, etc the instruction exists, it's operands are in the
+// right order, etc...
+// 
+// NB: to dev -> this is set just before the AST is generated and is valid for the duration of the 
+// ast_file constructor. <-- BIGGIE, here peeps. don't forget this.
+static cc::string *s_file_text = nullptr;
+
+static void error_at_tok(const token& tok, const cc::string& msg) {
+	emit_parse_error(tok.get_line(), tok.get_col(), tok.get_index(), *s_file_text, msg);
+}
 
 static void error_here(parser_state& parser, const cc::string& msg) {
 	token& cur_tok = parser.current_token;
@@ -22,7 +38,7 @@ static void advance(parser_state& parser) {
 	parser.current_token = parser.parser->parse_next_token();
 }
 
-static cc::string get_token_string(token& tok) {
+static cc::string get_token_string(const token& tok) {
 	cc::string tok_str(tok.get_data(), tok.get_data() + tok.get_data_length());
 	return tok_str;
 }
@@ -57,53 +73,83 @@ static std::unordered_map<cc::string, const cc::x86::gp_register*> s_reg_map = {
 	{ "edi", &cc::x86::gp_register::edi }
 };
 
-
 ast_register::ast_register(cc::string reg_name) {
 	type = kAst_Register;
 	reg = s_reg_map[reg_name];
 }
 
+static bool is_register(const cc::string& s) {
+	return s_reg_map.find(s) != s_reg_map.end();
+}
+
 static ast_node* parse_instruction(parser_state& p_state) {
-	token id_tok = p_state.current_token;
+	const token id_tok = p_state.current_token;
 	
 	advance(p_state);
 	
 	ast_instruction* ins = new ast_instruction(get_token_string(id_tok), nullptr, nullptr);
-	
+	ins->tok = id_tok;	
 	// Will either be the first operand or a newline (in the event the instruction has no operands)
-	token operand1_tok = p_state.current_token;
-	cc::string operand1_string = get_token_string(operand1_tok);
+	const token operand1_tok = p_state.current_token;
+	const cc::string operand1_string = get_token_string(operand1_tok);
 	
+	// The first operand to this instruction is a identifier (not a numeric literal)
 	if(accept(p_state, kTok_Identifier)) {
+		if(!is_register(operand1_string)) {
+			// #todo (bwilks) -> this is only until labels are implemented (to refer to memory locations)
+			// need to look into whether instructions even allow reg/memory first operands anyway 
+			error_at_tok(operand1_tok, cc::format_string("Register '{0}' does not exist.", operand1_string));
+			delete ins;
+			return nullptr;
+		}
+		
 		// #todo (bwilks) This assumes that the first operand is going to be a register (could be a label?) fix.
 		ins->first_operand = new ast_register(operand1_string);
 
 		if(accept(p_state, kTok_Comma)) {
-			token operand2_tok = p_state.current_token;
-			cc::string operand2_string = get_token_string(operand2_tok);
+			// Cache the second operands token, as the following `advance` calls
+			// will change the parse states current token so that it no longer represents 
+			// the second operand
+			const token operand2_tok = p_state.current_token;
+			const cc::string operand2_string = get_token_string(operand2_tok);
 
 			if(accept(p_state, kTok_IntLiteral)) {
 				ins->second_operand = new ast_int_literal(std::stoi(operand2_string));
 			} else if(accept(p_state, kTok_Identifier)) {
-				auto it = s_reg_map.find(operand2_string);
-				bool is_register = it != s_reg_map.end();
+				// See if the second operand is a register or a label
+				const bool is_register = is_register(operand2_string);
 				
 				if(is_register) {
 					ins->second_operand = new ast_register(operand2_string);
 				} else {
-					ins->second_operand = new ast_label(operand2_string);
+					// #todo (bwilks) -> fix (remove when labels & memory addressing is implemented)
+					// see previous todo
+					error_at_tok(operand2_tok, "Label (memory address) operands are not currently supported!");
+					delete ins;
+					return nullptr;
+					// If the second operand is not a register then it will probably be a label.
+					// ins->second_operand = new ast_label(operand2_string);
 				}
 			} else {
+				delete ins;
 				error_here(p_state, "Oi, there's an invalid second instruction operand over 'ere!");
 				return nullptr;
 			}
 		}
-	} else if(accept(p_state, kTok_IntLiteral)) {
+	} else if(accept(p_state, kTok_IntLiteral)) { // The first operand to this instruction is a numeric literal
 		ins->first_operand = new ast_int_literal(std::stoi(operand1_string));
-	}
-
-	if(!expect_cur(p_state, kTok_Newline))
+	} else if(p_state.current_token.get_type() != kTok_Newline) {
+		// If the has not been parsed (and is not a newline) then error, cus' we have no idea what it is :D
+		delete ins;
+		error_here(p_state, "Invalid first operand! :D");
 		return nullptr;
+	}
+	
+	// Instructions should finish with a newline
+	if(!expect_cur(p_state, kTok_Newline)) {
+		delete ins;
+		return nullptr;
+	}
 
 	return ins;
 }
@@ -116,66 +162,34 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 	parser_state p_state;
 	p_state.parser = &parser;
 	p_state.current_token = parser.parse_next_token();
+	
+	s_file_text = &parser.get_text();
 
 	cc::array<ast_section*> sections;
-	
-	p_state.sections = &sections;
+	bool stop_parsing = false;
 
 	for(;;) {
 		token& ctok = p_state.current_token;
 		switch(ctok.get_type()) {
 		case kTok_EOF:
-			goto end; // yeah, it's evil, shoot me
+		{
+			stop_parsing = true;
+			break;
+		}
 		case kTok_Newline:
+		{
 			break;
+		}
 		case kTok_Identifier:
-		/*{
-			token id_tok = p_state.current_token;
-			advance(p_state);
-			
-			ast_instruction* ins = new ast_instruction(get_token_string(id_tok), nullptr, nullptr);
-			token first_tok = p_state.current_token;
-			// first operand
-			if(accept(p_state, kTok_Identifier)) {
-				ins->first_operand = new ast_register(get_token_string(first_tok));
-				if(accept(p_state, kTok_Comma)) {
-					token second_tok = p_state.current_token;
-					// second operand.
-					if(accept(p_state, kTok_IntLiteral)) {
-						// whatever...
-						ins->second_operand = new ast_int_literal(std::stoi(get_token_string(second_tok)));
-					} else if(accept(p_state, kTok_Identifier)) {
-						// whatever...
-						cc::string tok_str = get_token_string(second_tok);
-						auto it = s_reg_map.find(tok_str);
-						if(it != s_reg_map.end()) {
-							ins->second_operand = new ast_register(tok_str);
-						} else {
-							ins->second_operand = new ast_label(tok_str);
-						}
-					}
-					else {
-						error_here(p_state, "Invalid second operand to instruction");
-						goto end; // again, evil
-					}
-				}
-			} else if(accept(p_state, kTok_IntLiteral)) {
-				ins->first_operand = new ast_int_literal(std::stoi(get_token_string(first_tok)));
-			} else if(p_state.current_token.get_type() == kTok_Newline) {
-			}
-			
-			ast_section* cur_section = sections.back();
-			cur_section->nodes.push_back(ins);
-
-			if(!expect_cur(p_state, kTok_Newline))
-				goto end; // whatever
-			break;
-		}*/
 		{
 			ast_node* node = parse_instruction(p_state);
 			
-			if(!node)
-				goto end;
+			// there has been a parse error occur while parsing the instruction
+			// so stop parsing
+			if(!node) {
+				stop_parsing = true;
+				break;
+			}
 
 			ast_section* current_section = sections.back();
 			current_section->nodes.push_back(node);
@@ -183,15 +197,24 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 			break;
 		}	
 		case kTok_Directive:
+		{
+			// At the moment we only parse '.section' directives.
+			// And since section names start with a '.' they are classed as directives
+			// hence why we accept a directive here
 			if(accept(p_state, kTok_Directive)) {
 				ast_section* sec = new ast_section(get_token_string(p_state.current_token));
 				sections.push_back(sec);
 			}
+
+			break;
+		}}
+
+		if(stop_parsing) {
 			break;
 		}
+
 		p_state.current_token = parser.parse_next_token();
 	}
-	end: // *sigh* I KNOW. #todo (bwilks) -> fix the control flow here to get rid of goto
 	
 	return sections;
 }
@@ -207,7 +230,9 @@ cc::x86::instruction ast_instruction::gen_x86() {
 				mode = kInsOps_none;
 			} else {
 				if(second_operand == nullptr) {
-					CFATAL("Cannot generate x86 for unsupported operands mode");
+					error_at_tok(tok, cc::format_string("Invalid instruction operands for '{0}'", ins_name));
+
+					return instruction::make_op(kNop);
 				} else {
 					if(second_operand->type == kAst_IntLiteral) {
 						mode = kInsOps_rm32imm32;
@@ -238,7 +263,7 @@ cc::x86::instruction ast_instruction::gen_x86() {
 		}
 	}
 
-	CWARN("Cannot generate x86 for '{0}'", ins_name);
+	error_at_tok(tok, cc::format_string("No such instruction '{0}'", ins_name));
 	return instruction::make_op(kNop);
 }
 

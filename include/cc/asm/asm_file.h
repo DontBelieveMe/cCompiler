@@ -11,6 +11,7 @@ namespace cc {
 
 		struct ast_node {
 			ast_node_type type = kAst_Unknown;
+			token tok;
 		};
 
 		struct ast_register : public ast_node {
