@@ -54,5 +54,5 @@ Addressing Modes (MOD)
 | Indirect w/ 8bit displacement  | 01     | Same as above, but w/ 1 byte displacement                                              |
 | Indirect w/ 32bit displacement | 10     | Same as above, but w/ 4 byte displacement                                              |
 | Direct                         | 11     | Move value from source value to destination register (Specified by Reg & R/M sections) |
-------------------------------------------|-----------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 
