@@ -12,7 +12,7 @@ namespace cc {
 		~time_block();
 
 	private:
-		std::chrono::high_resolution_clock::time_point m_start;		
+		std::chrono::steady_clock::time_point m_start;		
 		std::function<void(float)> m_end_callback;
 	};
 }

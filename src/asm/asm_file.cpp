@@ -117,9 +117,9 @@ static ast_node* parse_instruction(parser_state& p_state) {
 				ins->second_operand = new ast_int_literal(std::stoi(operand2_string));
 			} else if(accept(p_state, kTok_Identifier)) {
 				// See if the second operand is a register or a label
-				const bool is_register = is_register(operand2_string);
+				const bool second_operand_is_register = is_register(operand2_string);
 				
-				if(is_register) {
+				if(second_operand_is_register) {
 					ins->second_operand = new ast_register(operand2_string);
 				} else {
 					// #todo (bwilks) -> fix (remove when labels & memory addressing is implemented)
@@ -138,6 +138,17 @@ static ast_node* parse_instruction(parser_state& p_state) {
 		}
 	} else if(accept(p_state, kTok_IntLiteral)) { // The first operand to this instruction is a numeric literal
 		ins->first_operand = new ast_int_literal(std::stoi(operand1_string));
+	} else if(accept(p_state, kTok_Colon)) {
+		// It's a label!
+		
+		delete ins;
+		
+		if(!expect_cur(p_state, kTok_Newline)) {
+			return nullptr;
+		}
+
+		ast_label* label = new ast_label(get_token_string(id_tok));
+		return label;
 	} else if(p_state.current_token.get_type() != kTok_Newline) {
 		// If the has not been parsed (and is not a newline) then error, cus' we have no idea what it is :D
 		delete ins;
@@ -198,12 +209,24 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 		}	
 		case kTok_Directive:
 		{
-			// At the moment we only parse '.section' directives.
-			// And since section names start with a '.' they are classed as directives
-			// hence why we accept a directive here
-			if(accept(p_state, kTok_Directive)) {
+			token directive_tok = p_state.current_token;
+			cc::string directive_string = get_token_string(directive_tok);
+			advance(p_state);
+			if(directive_string == ".section") {
+				if(!expect_cur(p_state, kTok_Directive)) {
+					stop_parsing = true;
+					break;
+				}
+								
 				ast_section* sec = new ast_section(get_token_string(p_state.current_token));
 				sections.push_back(sec);
+			} else if(directive_string == ".global") {
+				if(!expect_cur(p_state, kTok_Identifier)) {
+					stop_parsing = true;
+					break;
+				}
+
+				CDEBUG("Global symbol: {0}", get_token_string(p_state.current_token));
 			}
 
 			break;
@@ -288,7 +311,7 @@ asm_file::asm_file(const cc::string& filepath) {
 				for(ast_node* node : section->nodes) {
 					if(node->type != kAst_Instruction) {
 						CWARN("Cannot gen x86 for non instruction. Skipping");
-						return;
+						continue;
 					}
 
 					ast_instruction* instruction = (ast_instruction*)node;

@@ -165,11 +165,11 @@ token asm_parser::parse_next_token() {
 		return tok;
 	}
 
-	if(isalpha(cur_char)) {
+	if(isalpha(cur_char) || cur_char == '_') {
 		char* start = &m_text[m_cindex];
 		cc::size_t len = 1;
 		cur_char = advance_char();
-		while(isalnum(cur_char)) {
+		while(isalnum(cur_char) || cur_char == '_') {
 			len++;
 			cur_char = advance_char();
 		}

@@ -84,7 +84,7 @@ namespace cc {
 			token parse_next_token();
 			cc::string& get_text() { return m_text; }
 			
-			cc::size_t get_lines_parsed() { return m_cline; }
+			cc::size_t get_lines_parsed() { return m_cline - 1; }
 
 		private:
 			cc::x86::instructions_collection m_instructions;

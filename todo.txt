@@ -1,2 +1,4 @@
  - [LOW] Fix the batch scripts in tools/ that are used to access MSVC toolchain programs
          so that they use vswhere.exe to find the the paths instead of them being hardcoded
+
+ - [HIGH] Should abort if an error occurred (atm it will just continue to write something -\_('')_/- )
