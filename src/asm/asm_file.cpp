@@ -22,7 +22,7 @@ struct parser_state {
 // right order, etc...
 // 
 // NB: to dev -> this is set just before the AST is generated and is valid for the duration of the 
-// ast_file constructor. <-- BIGGIE, here peeps. don't forget this.
+// asm_file constructor. <-- BIGGIE, here peeps. don't forget this.
 static cc::string *s_file_text = nullptr;
 
 static void error_at_tok(const token& tok, const cc::string& msg) {
