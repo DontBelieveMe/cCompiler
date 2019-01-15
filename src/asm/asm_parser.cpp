@@ -14,8 +14,8 @@
 
 using namespace cc::assembly;
 
-token::token(token_type type, char* data, cc::size_t data_length, cc::size_t line, cc::size_t col)
-	: m_type(type), m_data(data), m_data_length(data_length), m_line(line), m_col(col) {
+token::token(token_type type, char* data, cc::size_t data_length, cc::size_t line, cc::size_t col, cc::size_t idx)
+	: m_type(type), m_data(data), m_data_length(data_length), m_line(line), m_col(col), m_index(idx) {
 }
 
 // These need to be pointers to the registers because, this static array
@@ -53,7 +53,7 @@ struct parse_instruction {
 };
 
 static bool is_whitespace(char c) {
-	return c == ' ' || c == '\t' || c == '\n';
+	return c == ' ' || c == '\t';
 }
 
 asm_parser::asm_parser(cc::string&& text) 
@@ -70,7 +70,7 @@ char asm_parser::next_non_whitespace_char() {
 	return cur_char;
 }
 
-token asm_parser::parse_error_here(const cc::string& msg) {
+void cc::assembly::emit_parse_error(cc::size_t line, cc::size_t col, cc::size_t gidx, const cc::string& file_text, const cc::string& msg) {
 	// Let's do some cool visualisations :D
 	// #todo (bwilks) @FixMe @FixMe @FixMe
 	// this code is really messy & dirty, but it does the job for now
@@ -78,21 +78,21 @@ token asm_parser::parse_error_here(const cc::string& msg) {
 	
 	// Print out specific error message - e.g. "Unkown character...";
 	// As well as the line and column numbers.
-	CFATAL("({0}, {1}): error: {2}", m_cline, m_ccol, msg);
+	CFATAL("({0}, {1}): error: {2}", line, col, msg);
 	
-	const cc::size_t kCol = m_ccol;
-	cc::size_t idx = m_cindex - (kCol - 1);
+	const cc::size_t kCol = col;
+	cc::size_t idx = gidx - (kCol - 1);
 	
 	// Print out the line on which the error occurs.
-	cc::string line;
-	char c = m_text[idx];
+	cc::string line1;
+	char c = file_text[idx];
 	cc::size_t line_len = 0;
 	while(c != '\n') {
-		line += c;
-		c = m_text[++idx];
+		line1 += c;
+		c = file_text[++idx];
 		line_len++;
 	}
-	CFATAL("\t{0}", line);
+	CFATAL("\t{0}", line1);
 	
 	// Print out a '^' under the character where the error has occured
 	cc::size_t col_tmp = 1;
@@ -101,7 +101,7 @@ token asm_parser::parse_error_here(const cc::string& msg) {
 		if(col_tmp == kCol) {
 			line2 += '^';
 		} else {
-			if(line[col_tmp - 1] == '\t')
+			if(line1[col_tmp - 1] == '\t')
 				line2 += '\t';
 			else
 				line2 += ' ';
@@ -110,14 +110,18 @@ token asm_parser::parse_error_here(const cc::string& msg) {
 	}
 	CFATAL("\t{0}", line2);
 	
-	return token(kTok_EOF, nullptr, 0, m_cline, m_ccol);
+}
+
+token asm_parser::parse_error_here(const cc::string& msg) {
+	emit_parse_error(m_cline, m_ccol, m_cindex, m_text, msg);
+	return token(kTok_EOF, nullptr, 0, m_cline, m_ccol, m_cindex);
 }
 
 token asm_parser::parse_next_token() {
 	if(current_char() == '\n') {
 		char* start = &m_text[m_cindex];
 		advance_char();
-		return token(kTok_Newline, start, 1, m_cline, m_ccol);
+		return token(kTok_Newline, start, 1, m_cline, m_ccol, m_cindex);
 	}
 
 	char cur_char = next_non_whitespace_char();
@@ -132,13 +136,15 @@ token asm_parser::parse_next_token() {
 	if(current_char() == '\n') {
 		char* start = &m_text[m_cindex];
 		advance_char();
-		return token(kTok_Newline, start, 1, m_cline, m_ccol);
+		return token(kTok_Newline, start, 1, m_cline, m_ccol, m_cindex);
 	}
 
 	cur_char = next_non_whitespace_char();
 	
 	token tok;
 	
+	const cc::size_t iline = m_cline, icol = m_ccol, iidx = m_cindex;
+
 	// Parse directive
 	if(cur_char == '.') {
 		tok.set_type(kTok_Directive);
@@ -153,7 +159,8 @@ token asm_parser::parse_next_token() {
 		
 		tok.set_data(start);
 		tok.set_data_length(len);
-		tok.set_line_col(m_cline, m_ccol);
+		tok.set_line_col(iline, icol);
+		tok.set_index(iidx);
 
 		return tok;
 	}
@@ -167,13 +174,19 @@ token asm_parser::parse_next_token() {
 			cur_char = advance_char();
 		}
 
-		return token(kTok_Identifier, start, len, m_cline, m_ccol);
+		return token(kTok_Identifier, start, len, iline, icol, iidx);
 	}
 
 	if(cur_char == ',') {
 		char* start = &m_text[m_cindex];
 		cur_char = advance_char();
-		return token(kTok_Comma, start, 1, m_cline, m_ccol);
+		return token(kTok_Comma, start, 1, iline, icol, iidx);
+	}
+	
+	if(cur_char == ':') {
+		char *start = &m_text[m_cindex];
+		cur_char = advance_char();
+		return token(kTok_Colon, start, 1, iline, icol, iidx);
 	}
 
 	if(isdigit(cur_char)) {
@@ -184,14 +197,14 @@ token asm_parser::parse_next_token() {
 			cur_char = advance_char();
 		}
 
-		return token(kTok_IntLiteral, start, len, m_cline, m_ccol);
+		return token(kTok_IntLiteral, start, len, iline, icol, iidx);
 	}
 		
 	if(cur_char != '\0') {
-		parse_error_here(cc::format_string("Invalid character '{0}'", cur_char));	
+		parse_error_here(cc::format_string("Unknown character '{0}'", cur_char));	
 	}
 
-	return token(kTok_EOF, &m_text[0], 1, m_cline, m_ccol);
+	return token(kTok_EOF, &m_text[0], 1, iline, icol, iidx);
 }
 
 char asm_parser::current_char() {

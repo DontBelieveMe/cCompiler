@@ -14,16 +14,21 @@ namespace cc {
 			kTok_IntLiteral,
 			kTok_Comma,
 			kTok_EOF,
-			kTok_Newline
+			kTok_Newline,
+			kTok_Colon
 		};
 
 		class token {
 		public:
-			token(token_type type, char *data, cc::size_t data_length, cc::size_t line, cc::size_t col);
+			token(token_type type, char *data, cc::size_t data_length, cc::size_t line, cc::size_t col, cc::size_t idx);
 			token() {}
 			
 			void set_type(token_type t) {
 				m_type = t;
+			}
+
+			void set_index(cc::size_t idx) {
+				m_index = idx;
 			}
 
 			void set_line_col(cc::size_t line, cc::size_t col) {
@@ -47,6 +52,10 @@ namespace cc {
 				return m_col;
 			}
 
+			cc::size_t get_index() const {
+				return m_index;
+			}
+
 			token_type get_type() const {
 				return m_type;
 			}
@@ -63,7 +72,7 @@ namespace cc {
 			token_type m_type;
 			char* m_data;
 			cc::size_t m_data_length;
-			cc::size_t m_line, m_col;
+			cc::size_t m_line, m_col, m_index;
 		};
 
 		class asm_parser {
@@ -73,6 +82,9 @@ namespace cc {
 			static asm_parser from_file(const cc::string& filepath);
 			cc::x86::instructions_collection& get_instructions() { return m_instructions; }
 			token parse_next_token();
+			cc::string& get_text() { return m_text; }
+			
+			cc::size_t get_lines_parsed() { return m_cline; }
 
 		private:
 			cc::x86::instructions_collection m_instructions;
@@ -88,5 +100,7 @@ namespace cc {
 			
 			token parse_error_here(const cc::string& msg);
 		};
-	}	
+
+		void emit_parse_error(cc::size_t line, cc::size_t col, cc::size_t gidx, const cc::string& file_text, const cc::string& msg);	
+	}
 }

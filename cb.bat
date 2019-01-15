@@ -48,7 +48,7 @@ if "%1"=="clean" (
 	if exist "cCompiler.sln" del cCompiler.sln
 	if exist "cCompiler.vcxproj" del cCompiler.vcxproj
 	if exist "cCompiler.vcxproj.filters" del cCompiler.vcxproj.filters
-	if exist "cCompiler.vcxproj.user" del cCompiler.vcxproj.usew
+	if exist "cCompiler.vcxproj.user" del cCompiler.vcxproj.user
 	if exist ".vs" rd .vs /s /q	
 	echo All Done!
 )
