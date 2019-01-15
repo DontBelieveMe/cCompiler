@@ -1,0 +1,58 @@
+|===========================|
+|===========================|
+||                         ||
+||| X86 FORMAT CHEATSHEAT |||
+||                         ||
+|===========================|
+|===========================|
+
+------------------
+Instruction Format
+------------------
+
+(sizes specified in bytes)
+
+-----------------------------------------------------------------------------------
+| 1 - 4  |  1 - 2  |      1      |        1        |  1, 2 or 4   | 1, 2, or 4 |
+ Prefix     Opcode   Mod-Reg-R/M   Scale-Index-Base  Displacement   Immediate data
+ (Optional)                                          (Optional)     (Optional)
+-----------------------------------------------------------------------------------
+
+
+Mod-Reg-RM byte binary format
+
+                       MOD | REG | R/M
+(most significant bit) 00  | 000 | 000 (least significant bit) 
+
+#todo (bwilks) - fill in cheatsheat for SIB byte
+
+---------
+Registers
+---------
+
+--------------------------
+| Register Name | Binary |
+|------------------------|
+| EAX           | 000    |
+| ECX           | 001    |
+| EDX           | 010    |
+| EBX           | 011    |
+| ESP           | 100    |
+| EBP           | 101    |
+| ESI           | 110    |
+| EDI           | 111    |
+--------------------------
+
+----------------------
+Addressing Modes (MOD)
+----------------------
+
+------------------------------------------------------------------------------------------------------------------------------------
+| Mode                           | Binary | Description                                                                            |
+|--------------------------------|--------|----------------------------------------------------------------------------------------|
+| Indirect                       | 00     | Fetch contents at the address specified in R/M                                         |
+| Indirect w/ 8bit displacement  | 01     | Same as above, but w/ 1 byte displacement                                              |
+| Indirect w/ 32bit displacement | 10     | Same as above, but w/ 4 byte displacement                                              |
+| Direct                         | 11     | Move value from source value to destination register (Specified by Reg & R/M sections) |
+------------------------------------------|-----------------------------------------------------------------------------------------
+
