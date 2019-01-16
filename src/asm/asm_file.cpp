@@ -4,7 +4,7 @@
 #include <cc/x86/gp_register.h>
 #include <cc/coff/section.h>
 #include <cc/timing.h>
-
+#include <cc/assert.h>
 #include <algorithm>
 
 using namespace cc::assembly;
@@ -12,6 +12,7 @@ using namespace cc::assembly;
 struct parser_state {
 	asm_parser* parser;
 	token current_token;
+	cc::array<ast_section*> *sections;
 };
 
 // #todo (bwilks) -> FIX. We need some better way of accessing file text
@@ -101,8 +102,18 @@ static ast_node* parse_instruction(parser_state& p_state) {
 			// #todo (bwilks) -> this is only until labels are implemented (to refer to memory locations)
 			// need to look into whether instructions even allow reg/memory first operands anyway 
 			//error_at_tok(operand1_tok, cc::format_string("Register '{0}' does not exist.", operand1_string));
-			ast_label* label = new ast_label(operand1_string);
-			ins->first_operand = label;	
+			//ast_label* label = new ast_label(operand1_string);
+			for (ast_section* section : *p_state.sections) {
+				for (ast_node* node : section->nodes) {
+					if (node->type == kAst_Label) {
+						ast_label* l = (ast_label*)node;
+						if (l->name == operand1_string) {
+							ins->first_operand = l;
+						}
+					}
+				}
+			}
+			ASSERT(ins->first_operand != nullptr, "Ahhhh, error");
 		} else {
 			ins->first_operand = new ast_register(operand1_string);
 		}
@@ -179,7 +190,7 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 
 	cc::array<ast_section*> sections;
 	bool stop_parsing = false;
-
+	p_state.sections = &sections;
 	for(;;) {
 		token& ctok = p_state.current_token;
 		switch(ctok.get_type()) {
