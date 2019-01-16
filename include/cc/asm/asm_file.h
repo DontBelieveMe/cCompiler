@@ -35,6 +35,7 @@ namespace cc {
 			}
 
 			cc::string name;
+			cc::size_t offset = 0;
 		};
 
 		struct ast_instruction : public ast_node {
@@ -46,7 +47,7 @@ namespace cc {
 				ins_name = op;
 			}
 			
-			cc::x86::instruction gen_x86();	
+			cc::x86::instruction gen_x86(cc::size_t offset);	
 
 			cc::string ins_name;
 			ast_node* first_operand;
@@ -67,6 +68,7 @@ namespace cc {
 			cc::string name;
 			cc::array<ast_node*> nodes;
 		};
+
 		class asm_file {
 		public:
 			asm_file(const cc::string& filepath);
@@ -74,7 +76,7 @@ namespace cc {
 			coff::object_file* get_obj_file() { return m_object_file.get(); }
 		private:
 			cc::unique_ptr<coff::object_file> m_object_file;	
-		
+			cc::array<cc::string> m_global_symbols;	
 		private:
 			cc::array<ast_section*> gen_ast(asm_parser& parser);
 		};

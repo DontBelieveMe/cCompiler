@@ -5,6 +5,8 @@
 #include <cc/coff/section.h>
 #include <cc/timing.h>
 
+#include <algorithm>
+
 using namespace cc::assembly;
 
 struct parser_state {
@@ -98,13 +100,12 @@ static ast_node* parse_instruction(parser_state& p_state) {
 		if(!is_register(operand1_string)) {
 			// #todo (bwilks) -> this is only until labels are implemented (to refer to memory locations)
 			// need to look into whether instructions even allow reg/memory first operands anyway 
-			error_at_tok(operand1_tok, cc::format_string("Register '{0}' does not exist.", operand1_string));
-			delete ins;
-			return nullptr;
+			//error_at_tok(operand1_tok, cc::format_string("Register '{0}' does not exist.", operand1_string));
+			ast_label* label = new ast_label(operand1_string);
+			ins->first_operand = label;	
+		} else {
+			ins->first_operand = new ast_register(operand1_string);
 		}
-		
-		// #todo (bwilks) This assumes that the first operand is going to be a register (could be a label?) fix.
-		ins->first_operand = new ast_register(operand1_string);
 
 		if(accept(p_state, kTok_Comma)) {
 			// Cache the second operands token, as the following `advance` calls
@@ -225,8 +226,8 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 					stop_parsing = true;
 					break;
 				}
-
-				CDEBUG("Global symbol: {0}", get_token_string(p_state.current_token));
+				cc::string symbol_name = get_token_string(p_state.current_token);
+				m_global_symbols.push_back(symbol_name);
 			}
 
 			break;
@@ -242,8 +243,24 @@ cc::array<ast_section*> asm_file::gen_ast(asm_parser& parser) {
 	return sections;
 }
 
-cc::x86::instruction ast_instruction::gen_x86() {
+cc::x86::instruction ast_instruction::gen_x86(cc::size_t instruction_offset) {
 	using namespace cc::x86;
+	
+	// Handle "special" cases. << REALLY HACKY, FIX >>
+	if(ins_name == "call") {
+		if(first_operand != nullptr && first_operand->type == kAst_Label) {
+			ast_label* label = (ast_label*)first_operand;
+			
+			// #todo(bwilks) -> fix, don't hardcode this
+			const cc::size_t kSizeofCallInstruction = 5;
+			const cc::i32 rel_offset = label->offset - (instruction_offset + kSizeofCallInstruction);
+			instruction callIns = instruction::make_imm32_op(kCall, rel_offset);
+			return callIns;
+		} else {
+			error_at_tok(tok, "Invalid call instruction.");
+			return instruction::make_op(kNop);
+		}
+	}
 
 	for(const auto& opcode_def : instructions_map) {
 		instruction_def opcode = opcode_def.second;
@@ -308,14 +325,35 @@ asm_file::asm_file(const cc::string& filepath) {
 				obj_section->set_characteristics(characteristics);
 
 				cc::x86::instructions_collection instructions;
+				
+				int index=0;
 				for(ast_node* node : section->nodes) {
-					if(node->type != kAst_Instruction) {
-						CWARN("Cannot gen x86 for non instruction. Skipping");
-						continue;
+					switch(node->type) {
+					case kAst_Instruction:
+					{
+						const cc::size_t ins_offset = instructions.offset_of_instruction(instructions.get_count());
+						ast_instruction* instruction = (ast_instruction*)node;
+						instructions.add(instruction->gen_x86(ins_offset));
+						
+						if(index > 0) {
+							ast_node* prev = section->nodes[index - 1];
+							if(prev->type == kAst_Label) {
+								const cc::size_t offset = instructions.offset_of_instruction(instructions.get_count() - 1);
+								ast_label* l = (ast_label*)prev;
+								l->offset = offset;
+							}
+						}
+						break;
 					}
-
-					ast_instruction* instruction = (ast_instruction*)node;
-					instructions.add(instruction->gen_x86());
+					case kAst_Label:
+					{
+						break;
+					}
+					default:
+						CWARN("Cannot generate code for unknown node type");
+						break;
+					}
+					index++;
 				}
 				obj_section->set_raw_data(instructions.combine());
 			} else {
@@ -341,16 +379,29 @@ asm_file::asm_file(const cc::string& filepath) {
 	
 	cc::shared_ptr<cc::coff::symbol_table> sym_table = cc::make_shared<cc::coff::symbol_table>();
 	
-	cc::coff::symbol sym;
-	sym.is_aux = false;
-	sym.number_of_aux_symbols = 0;
-	sym.name = cc::coff::symbol_name("_main");
-	sym.section_number = 1;
-	sym.storage_clss = cc::coff::kImageSymClassExternal;
-	sym.value = 0;
-	sym_table->add_symbol(sym);
-	object->set_symbol_table(sym_table);
+	int section_index=1;
+	for(ast_section* section : sections) {
+		for(ast_node* node : section->nodes) {
+			if(node->type == kAst_Label) {
+				ast_label* label = (ast_label*) node;
+				auto it = std::find(m_global_symbols.begin(), m_global_symbols.end(), label->name);
+				
+				if(it != m_global_symbols.end()) {
+					cc::coff::symbol sym;
+					sym.is_aux = false;
+					sym.number_of_aux_symbols = 0;
+					sym.name = cc::coff::symbol_name(label->name);
+					sym.section_number = section_index;
+					sym.storage_clss = cc::coff::kImageSymClassExternal;
+					sym.value = label->offset;
+					sym_table->add_symbol(sym);
+				}
+			}
+		}
+		section_index++;
+	}
 
+	object->set_symbol_table(sym_table);
 	m_object_file = std::move(object);
 }
 

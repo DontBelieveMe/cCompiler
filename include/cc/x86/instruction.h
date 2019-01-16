@@ -66,13 +66,15 @@ namespace cc {
 			kAdd_r32rm32,
 			kNop,
 			kSub_rm32imm32,
-			kSub_r32rm32
+			kSub_r32rm32,
+			kCall
 		};
 		
 		enum instruction_operands_def {
 			kInsOps_rm32imm32 = 0,
 			kInsOps_r32rm32 = 1,
-			kInsOps_none = 2
+			kInsOps_none = 2,
+			kInsOps_imm32 = 3
 		};
 
 		class instruction_def {
@@ -86,6 +88,8 @@ namespace cc {
 			bool uses_extension_modifier() const;
 			bool encodes_reg_in_opcode() const;
 			
+			bool has_immediate_code_offset() const;
+
 			cc::u8 get_extension_digit() const;
 			const char* get_name() const;
 			instruction_operands_def get_operands_def() const { return m_operands_def; }
@@ -105,7 +109,7 @@ namespace cc {
 			static instruction make_reg_imm_op(mnemonic op, const cc::x86::gp_register& reg, cc::u32 data);
 			static instruction make_2reg_op(mnemonic op, const cc::x86::gp_register& reg0, const cc::x86::gp_register& reg1);
 			static instruction make_op(mnemonic op);
-
+			static instruction make_imm32_op(mnemonic op, cc::u32 value);			
 			cc::size_t size() const { return m_size; }
 			instruction_buffer& data() { return m_data; }
 
@@ -116,18 +120,24 @@ namespace cc {
 
 		class instructions_collection {
 		public:
+			typedef cc::array<instruction> arr_type;
+			
 			instructions_collection(const std::initializer_list<cc::x86::instruction>& instructions);
 			instructions_collection();
 
 			cc::array<cc::u8> combine();
+			cc::size_t get_count() const { return m_instructions.size(); }	
 			void add(const instruction& ins);
 			void add(const cc::array<instruction>& instructions);	
-			typedef cc::array<instruction> arr_type;
-			arr_type& get_array() { return m_instructions; }
-			arr_type::iterator begin() { return m_instructions.begin(); }
-			arr_type::const_iterator cbegin() const { return m_instructions.cbegin(); }
+			
+			cc::size_t offset_of_instruction(cc::size_t index);
 
+			arr_type& get_array() { return m_instructions; }
+			
+			arr_type::iterator begin() { return m_instructions.begin(); }
 			arr_type::iterator end() { return m_instructions.end(); }
+
+			arr_type::const_iterator cbegin() const { return m_instructions.cbegin(); }
 			arr_type::const_iterator cend() const { return m_instructions.cend(); }
 
 		private:

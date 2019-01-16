@@ -1,13 +1,18 @@
 .section .text ; Begin the .text (code) section
 .global _main
 
-_main:
-	mov ebx, 50
-	mov ecx, 50
-	mov edx, ebx
-	add edx, ecx
+setupInputs:
+	mov eax, 20
+	mov ebx, 30
+	ret
 
-	mov ebx, 9
-	sub edx, ebx
-	mov eax, edx
+addInputs:
+	mov ecx, eax
+	add ecx, ebx
+	mov eax, ecx
+	ret
+
+_main:
+	call setupInputs
+	call addInputs 
 	ret

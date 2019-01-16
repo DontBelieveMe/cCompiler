@@ -5,7 +5,7 @@ public  _main
 _text   segment
 
 func proc
-	mov eax, 100
+	mov eax, 2
 	ret
 func endp
 

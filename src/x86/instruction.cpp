@@ -26,7 +26,8 @@ std::unordered_map<cc::x86::mnemonic, cc::x86::instruction_def> cc::x86::instruc
 	{ kNop, instruction_def(0x90, kInsMod_None, "nop", kInsOps_none) },
 
 	{ kSub_rm32imm32, instruction_def(0x81, kInsMod_Ext5 | kInsMod_id, "sub", kInsOps_rm32imm32) },
-	{ kSub_r32rm32,   instruction_def(0x2B, kInsMod_r, "sub", kInsOps_r32rm32) }
+	{ kSub_r32rm32,   instruction_def(0x2B, kInsMod_r, "sub", kInsOps_r32rm32) },
+	{ kCall, instruction_def(0xE8, kInsMod_cw, "call", kInsOps_imm32) }
 };
 
 bool instruction_def::uses_extension_modifier() const {
@@ -39,6 +40,12 @@ bool instruction_def::uses_extension_modifier() const {
 bool instruction_def::encodes_reg_in_opcode() const {
 	return (m_mods & kInsMod_pRb) || (m_mods & kInsMod_pRw) ||
 		(m_mods & kInsMod_pRd) || (m_mods & kInsMod_pRo);
+}
+
+bool instruction_def::has_immediate_code_offset() const {
+	return (m_mods & kInsMod_cb) || (m_mods & kInsMod_cw) || 
+		(m_mods & kInsMod_cd) || (m_mods & kInsMod_cp) || 
+		(m_mods & kInsMod_co) || (m_mods & kInsMod_ct);
 }
 
 cc::u8 instruction_def::get_extension_digit() const {
@@ -152,11 +159,36 @@ instruction instruction::make_op(mnemonic op) {
 	return final_ins;
 }
 
+instruction instruction::make_imm32_op(mnemonic op, cc::u32 value) {
+	const instruction_def& kOpcodeData = instructions_map[op];
+	const cc::size_t kSizeofOpcode = 1;
+	
+	instruction final_ins;
+	final_ins.m_data[0] = kOpcodeData.get_opcode();
+	final_ins.m_size = kSizeofOpcode;	
+	if(kOpcodeData.has_immediate_code_offset()) {
+		final_ins.m_size += sizeof(value);
+		std::memcpy(&final_ins.m_data[1], (u8*)&value, sizeof(value));
+	}
+
+	return final_ins;
+}
+
 instructions_collection::instructions_collection(const std::initializer_list<cc::x86::instruction>& instructions) {
 	m_instructions = std::vector<instruction>(instructions.begin(), instructions.end());
 }
 
 instructions_collection::instructions_collection() {}
+
+cc::size_t instructions_collection::offset_of_instruction(cc::size_t index) {
+	const cc::size_t offset = std::accumulate(m_instructions.begin(), m_instructions.begin() + index, 0,
+		[](cc::size_t acu, const instruction& ins){
+			return acu + ins.size();
+		}
+	);
+
+	return offset;
+} 
 
 cc::array<cc::u8> instructions_collection::combine() {
 	const cc::size_t kTotalInstructionsSize = std::accumulate(m_instructions.begin(), m_instructions.end(), 0,
