@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	using namespace cc::assembly;
 
 	cc::logger::startup();
-	// Hello World! :D :D :D :D :D
+	
 	if(argc != 2) {
 		CFATAL("Invalid numer of arguments!");
 		return 1;
@@ -26,6 +26,12 @@ int main(int argc, char** argv) {
 	});
 	
 	asm_file source_file(argv[1]);
-	source_file.get_obj_file()->write_to_file("data/output.obj");
+
+	if (source_file.compiled_successfully) {
+		source_file.get_obj_file()->write_to_file("data/output.obj");
+	}
+	else {
+		CFATAL("Found errors - not writing object file");
+	}
 	return 0;
 }

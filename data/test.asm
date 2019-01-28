@@ -8,11 +8,12 @@ setupInputs:
 
 addInputs:
 	mov ecx, eax
-	add ecx, ebx
+	add ecx, ebx 
 	mov eax, ecx
 	ret
 
 _main:
 	call setupInputs
-	call addInputs 
+	call addInputs
+	sub eax, 20
 	ret

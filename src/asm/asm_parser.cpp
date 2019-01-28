@@ -15,11 +15,11 @@
 using namespace cc::assembly;
 
 token::token(token_type type, char* data, cc::size_t data_length, cc::size_t line, cc::size_t col, cc::size_t idx)
-	: m_type(type), m_data(data), m_data_length(data_length), m_line(line), m_col(col), m_index(idx) {
+	: m_type(type), m_data(data), m_data_length(data_length), loc(file_location(line, col, idx)) {
 }
 
 // These need to be pointers to the registers because, this static array
-// is not nessersarily initalized after the registers have been (which are
+// is not necessarily initialized after the registers have been (which are
 // also static data). They are pointers so that when they need to be looked
 // up they reference the original.
 static std::unordered_map<cc::string, const cc::x86::gp_register*> s_reg_map = {
@@ -71,12 +71,12 @@ char asm_parser::next_non_whitespace_char() {
 }
 
 void cc::assembly::emit_parse_error(cc::size_t line, cc::size_t col, cc::size_t gidx, const cc::string& file_text, const cc::string& msg) {
-	// Let's do some cool visualisations :D
+	// Let's do some cool visualizations :D
 	// #todo (bwilks) @FixMe @FixMe @FixMe
 	// this code is really messy & dirty, but it does the job for now
 	// -=- clean up -=-
 	
-	// Print out specific error message - e.g. "Unkown character...";
+	// Print out specific error message - e.g. "Unknown character...";
 	// As well as the line and column numbers.
 	CFATAL("({0}, {1}): error: {2}", line, col, msg);
 	
@@ -94,7 +94,7 @@ void cc::assembly::emit_parse_error(cc::size_t line, cc::size_t col, cc::size_t 
 	}
 	CFATAL("\t{0}", line1);
 	
-	// Print out a '^' under the character where the error has occured
+	// Print out a '^' under the character where the error has occurred
 	cc::size_t col_tmp = 1;
 	cc::string line2 = "";
 	while(col_tmp <= line_len) {
@@ -159,8 +159,8 @@ token asm_parser::parse_next_token() {
 		
 		tok.set_data(start);
 		tok.set_data_length(len);
-		tok.set_line_col(iline, icol);
-		tok.set_index(iidx);
+		
+		tok.set_location(file_location(iline, icol, iidx));
 
 		return tok;
 	}
@@ -201,10 +201,16 @@ token asm_parser::parse_next_token() {
 	}
 		
 	if(cur_char != '\0') {
-		parse_error_here(cc::format_string("Unknown character '{0}'", cur_char));	
+		parse_error_here(cc::format_string("Unknown character '{0}'", cur_char));
+		
+		while (cur_char != '\n') {
+			cur_char = advance_char();
+		}
+
+		return token(kTok_Error, &m_text[m_cindex], 1, m_cline, m_ccol, m_cindex);
 	}
 
-	return token(kTok_EOF, &m_text[0], 1, iline, icol, iidx);
+	return token(kTok_EOF, "0", 1, iline, icol, iidx);
 }
 
 char asm_parser::current_char() {

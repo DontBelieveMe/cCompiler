@@ -27,14 +27,18 @@ struct parser_state {
 // NB: to dev -> this is set just before the AST is generated and is valid for the duration of the 
 // asm_file constructor. <-- BIGGIE, here peeps. don't forget this.
 static cc::string *s_file_text = nullptr;
-
-static void error_at_tok(const token& tok, const cc::string& msg) {
-	emit_parse_error(tok.get_line(), tok.get_col(), tok.get_index(), *s_file_text, msg);
-}
+static bool s_found_errors = false;
 
 static void error_here(parser_state& parser, const cc::string& msg) {
 	token& cur_tok = parser.current_token;
-	emit_parse_error(cur_tok.get_line(), cur_tok.get_col(), cur_tok.get_index(), parser.parser->get_text(), msg);
+	file_location loc = cur_tok.get_location();
+	s_found_errors = true;
+	emit_parse_error(loc.line, loc.col, loc.index, parser.parser->get_text(), msg);
+}
+
+static void error_at_loc(file_location loc, const cc::string& msg) {
+	emit_parse_error(loc.line, loc.col, loc.index, *s_file_text, msg);	
+	s_found_errors = true;
 }
 
 static void advance(parser_state& parser) {
@@ -49,6 +53,10 @@ static cc::string get_token_string(const token& tok) {
 // Returns true if the current token is of the correct type
 // false & error message otherwise.
 static bool expect_cur(parser_state& parser, token_type expected_type) {
+	if (parser.current_token.get_type() == kTok_Error) {
+		return true;
+	}
+
 	if(parser.current_token.get_type() != expected_type) {
 		cc::string tok_str = get_token_string(parser.current_token);
 		error_here(parser, cc::format_string("Unexpected token '{0}'.", tok_str));
@@ -58,10 +66,11 @@ static bool expect_cur(parser_state& parser, token_type expected_type) {
 }
 
 static bool accept(parser_state& parser, token_type expected) {
-	if(parser.current_token.get_type() == expected) {
+	if(parser.current_token.get_type() == expected || parser.current_token.get_type() == kTok_Error) {
 		advance(parser);
 		return true;
 	}
+
 	return false;
 }
 
@@ -91,7 +100,8 @@ static ast_node* parse_instruction(parser_state& p_state) {
 	advance(p_state);
 	
 	ast_instruction* ins = new ast_instruction(get_token_string(id_tok), nullptr, nullptr);
-	ins->tok = id_tok;	
+	ins->loc = file_location(id_tok.get_location());	
+	
 	// Will either be the first operand or a newline (in the event the instruction has no operands)
 	const token operand1_tok = p_state.current_token;
 	const cc::string operand1_string = get_token_string(operand1_tok);
@@ -136,7 +146,8 @@ static ast_node* parse_instruction(parser_state& p_state) {
 				} else {
 					// #todo (bwilks) -> fix (remove when labels & memory addressing is implemented)
 					// see previous todo
-					error_at_tok(operand2_tok, "Label (memory address) operands are not currently supported!");
+					//error_at_tok(operand2_tok, "Label (memory address) operands are not currently supported!");
+					error_at_loc(operand2_tok.get_location(), "Labels as operands are not currently supported!");
 					delete ins;
 					return nullptr;
 					// If the second operand is not a register then it will probably be a label.
@@ -268,7 +279,7 @@ cc::x86::instruction ast_instruction::gen_x86(cc::size_t instruction_offset) {
 			instruction callIns = instruction::make_imm32_op(kCall, rel_offset);
 			return callIns;
 		} else {
-			error_at_tok(tok, "Invalid call instruction.");
+			error_at_loc(loc, "Invalid call instruction.");
 			return instruction::make_op(kNop);
 		}
 	}
@@ -281,7 +292,7 @@ cc::x86::instruction ast_instruction::gen_x86(cc::size_t instruction_offset) {
 				mode = kInsOps_none;
 			} else {
 				if(second_operand == nullptr) {
-					error_at_tok(tok, cc::format_string("Invalid instruction operands for '{0}'", ins_name));
+					error_at_loc(loc, cc::format_string("Invalid instruction operands for '{0}'", ins_name));
 
 					return instruction::make_op(kNop);
 				} else {
@@ -314,7 +325,7 @@ cc::x86::instruction ast_instruction::gen_x86(cc::size_t instruction_offset) {
 		}
 	}
 
-	error_at_tok(tok, cc::format_string("No such instruction '{0}'", ins_name));
+	error_at_loc(loc, cc::format_string("No such instruction '{0}'", ins_name));
 	return instruction::make_op(kNop);
 }
 
@@ -327,17 +338,19 @@ asm_file::asm_file(const cc::string& filepath) {
 		cc::time_block perf([](float seconds){
 			CINFO("Code generation took {0}s", seconds);
 		});
+
 		for(ast_section* section : sections) {
 			cc::shared_ptr<cc::coff::section> obj_section = cc::make_shared<cc::coff::section>();
 			obj_section->set_name(section->name);
 			cc::u32 characteristics = 0;
+
 			if(section->name == ".text") {
 				characteristics = cc::coff::kImageScnMemExecute | cc::coff::kImageScnCntCode | cc::coff::kImageScnMemRead;
 				obj_section->set_characteristics(characteristics);
 
 				cc::x86::instructions_collection instructions;
 				
-				int index=0;
+				int index = 0;
 				for(ast_node* node : section->nodes) {
 					switch(node->type) {
 					case kAst_Instruction:
@@ -414,5 +427,7 @@ asm_file::asm_file(const cc::string& filepath) {
 
 	object->set_symbol_table(sym_table);
 	m_object_file = std::move(object);
+
+	compiled_successfully = !s_found_errors;
 }
 
