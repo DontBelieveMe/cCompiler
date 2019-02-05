@@ -123,7 +123,11 @@ static ast_node* parse_instruction(parser_state& p_state) {
 					}
 				}
 			}
-			ASSERT(ins->first_operand != nullptr, "Ahhhh, error");
+			if(!ins->first_operand) {
+				error_at_loc(operand1_tok.get_location(), cc::format_string("Unknown label {0}", operand1_string));
+				delete ins;
+				return nullptr;
+			}
 		} else {
 			ins->first_operand = new ast_register(operand1_string);
 		}
@@ -147,7 +151,7 @@ static ast_node* parse_instruction(parser_state& p_state) {
 					// #todo (bwilks) -> fix (remove when labels & memory addressing is implemented)
 					// see previous todo
 					//error_at_tok(operand2_tok, "Label (memory address) operands are not currently supported!");
-					error_at_loc(operand2_tok.get_location(), "Labels as operands are not currently supported!");
+					error_at_loc(operand2_tok.get_location(), "Labels as secondary operands are not currently supported!");
 					delete ins;
 					return nullptr;
 					// If the second operand is not a register then it will probably be a label.
