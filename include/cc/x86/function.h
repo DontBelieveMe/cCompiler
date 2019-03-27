@@ -4,23 +4,23 @@
 
 namespace cc {
 	namespace x86 {
-		enum function_attrib {
+		enum EFunctionAttribs {
 			kFuncAttrib_External = 0,
 			kFuncAttrib_Static = 1
 		};
 
-		class function {
+		class Function {
 		public:
-			static function make_function(const cc::string& name, cc::u32 func_attribs);
+			static Function make_function(const cc::String& name, cc::u32 func_attribs);
 			
-			void add_instruction(const instruction& ins);
-			void add_instructions(const cc::array<instruction>& instructions);
+			void add_instruction(const Instruction& ins);
+			void add_instructions(const cc::Array<Instruction>& instructions);
 
-			instructions_collection& get_instructions()
+			InstructionsCollection& get_instructions()
 				{ return m_instructions; }
 		private:
-			cc::string m_name;
-			cc::x86::instructions_collection m_instructions;
+			cc::String m_name;
+			cc::x86::InstructionsCollection m_instructions;
 			cc::u32 m_attribs;
 		};
 	}

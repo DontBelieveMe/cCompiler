@@ -9,22 +9,22 @@
 
 using namespace cc::coff;
 
-object_file::object_file()
+ObjectFile::ObjectFile()
 	: m_machine(kMachineUnknown), m_datetime(0) {
 }
 
-object_file& object_file::set_machine(machine_type machine) {
+ObjectFile& ObjectFile::set_machine(EMachineType machine) {
 	m_machine = machine;
 	return *this;
 }
 
-void object_file::read_from_file(const cc::string& filepath) {
+void ObjectFile::read_from_file(const cc::String& filepath) {
 	using namespace cc;
 
-	file obj_file_handle(filepath);
+	File obj_file_handle(filepath);
 	u8* file_data = obj_file_handle.read();
 
-	m_machine = static_cast<machine_type>(extract_u16(file_data, 0));
+	m_machine = static_cast<EMachineType>(extract_u16(file_data, 0));
 	
 	u16 num_sections = extract_u16(file_data, 2);
 	m_datetime = extract_u32(file_data, 4);
@@ -40,14 +40,14 @@ void object_file::read_from_file(const cc::string& filepath) {
 
 	m_sections.reserve(num_sections);
 	for (u16 i = 0; i < num_sections; ++i) {
-		shared_ptr<section> csection = make_shared<section>(kFileHeaderSize + file_data + (i * kSectionHeaderSize));
+		SharedPtr<Section> csection = make_shared<Section>(kFileHeaderSize + file_data + (i * kSectionHeaderSize));
 		m_sections.push_back(csection);
 	}
 
-	m_symbol_table = cc::make_shared<symbol_table>(file_data + ptr_to_symbol_table, number_of_symbols);
+	m_symbol_table = cc::make_shared<SymbolTable>(file_data + ptr_to_symbol_table, number_of_symbols);
 }
 
-void object_file::write_to_file(const cc::string& filepath) {
+void ObjectFile::write_to_file(const cc::String& filepath) {
 	// 4 two byte entry's and 3 4 byte entry's make up the header.
 	// see below for the exact entry names, size and their offsets.
 	const cc::u32 kHeaderSize = (2 * 4) + (4 * 3);
@@ -56,7 +56,7 @@ void object_file::write_to_file(const cc::string& filepath) {
 	const cc::u32 kSectionHeadersTableSize = m_sections.size() * 40;
 
 	const cc::u32 kRawDataSize = std::accumulate(m_sections.begin(), m_sections.end(), 0, 
-		[](cc::u32 acu, const cc::shared_ptr<cc::coff::section>& section) -> cc::u32 {
+		[](cc::u32 acu, const cc::SharedPtr<cc::coff::Section>& section) -> cc::u32 {
 			return acu + section->raw_data().size();
 		}
 	);
@@ -64,11 +64,11 @@ void object_file::write_to_file(const cc::string& filepath) {
 	// The symbol table is to immediately precede the raw data.
 	const cc::u32 kSymbolTableOffset = kHeaderSize + kSectionHeadersTableSize + kRawDataSize;
 
-	cc::file file_handle(filepath);	
+	cc::File file_handle(filepath);	
 		
 	// #todo (bwilks) - this should be replaced with some custom buffer class :-
 	//                  will mean we can easily push back values of any size.
-	cc::array<cc::u8> buffer;
+	cc::Array<cc::u8> buffer;
 	
 	buffer.resize(kHeaderSize); // this means that we can use memset to easily set multi byte values.
 
@@ -106,18 +106,18 @@ void object_file::write_to_file(const cc::string& filepath) {
 	
 	// Calculate the offsets for the raw data of each section.
 	// Also add the sections table to the buffer.
-	for (cc::shared_ptr<section>& section : m_sections) {
+	for (cc::SharedPtr<section>& section : m_sections) {
 		section->set_raw_data_offset(raw_dat_offset);
 		
-		cc::array<cc::u8> section_header = section->gen_section_header_bytes();
+		cc::Array<cc::u8> section_header = section->gen_section_header_bytes();
 		buffer.insert(buffer.end(), section_header.begin(), section_header.end());
 	
 		raw_dat_offset += section->raw_data().size();
 	}
 
 	// Add in each each sections raw data after the sections table.
-	for (cc::shared_ptr<section>& section : m_sections) {
-		cc::array<cc::u8> dat = section->raw_data();
+	for (cc::SharedPtr<section>& section : m_sections) {
+		cc::Array<cc::u8> dat = section->raw_data();
 		buffer.insert(buffer.end(), dat.begin(), dat.end());
 	}
 
@@ -127,7 +127,7 @@ void object_file::write_to_file(const cc::string& filepath) {
 	std::memcpy(buffer.data() + 8, &raw_dat_offset, 4);
 	
 	// Add the symbol table to the object file, directly after any raw data.
-	cc::array<cc::u8> symbol_table_buffer = m_symbol_table->write_to_buffer();
+	cc::Array<cc::u8> symbol_table_buffer = m_symbol_table->write_to_buffer();
 	buffer.insert(buffer.end(), symbol_table_buffer.begin(), symbol_table_buffer.end());
 
 	// #todo (bwilks) - fix.

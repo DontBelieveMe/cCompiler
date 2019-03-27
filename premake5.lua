@@ -12,7 +12,8 @@ project "cCompiler"
 	
 	includedirs { 
 		"include",
-		"vendor/spdlog/include"
+		"vendor/spdlog/include",
+		"vendor/cxxopts"
 	}
 	
 	filter "configurations:Debug"

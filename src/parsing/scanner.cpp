@@ -3,14 +3,14 @@
 
 using namespace cc::parsing;
 
-scanner scanner::from_file(const cc::string& filepath) {
+scanner scanner::from_file(const cc::String& filepath) {
 	scanner scan;
 	
-	cc::file src_file(filepath);
+	cc::File src_file(filepath);
 	src_file.read(cc::kFileModeText);
 
-	cc::array<cc::u8> arr = src_file.data_array();
-	scan.m_string = cc::string(arr.begin(), arr.end()); 
+	cc::Array<cc::u8> arr = src_file.data_array();
+	scan.m_string = cc::String(arr.begin(), arr.end()); 
 
 	return scan;
 }

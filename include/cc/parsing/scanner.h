@@ -15,11 +15,11 @@ namespace cc {
 
 		class scanner {
 		public:
-			static scanner from_file(const cc::string& filepath);
+			static scanner from_file(const cc::String& filepath);
 
 
 		private:
-			cc::string m_string;
+			cc::String m_string;
 		};
 	}
 }

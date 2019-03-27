@@ -5,18 +5,18 @@
 
 namespace cc {
 	namespace assembly {
-		class asm_file {
+		class AsmFile {
 		public:
-			asm_file(const cc::string& filepath);
+			AsmFile(const cc::String& filepath);
 			
-			coff::object_file* get_obj_file() { return m_object_file.get(); }
+			coff::ObjectFile* get_obj_file() { return m_object_file.get(); }
 
 			bool compiled_successfully = true;
 		private:
-			cc::unique_ptr<coff::object_file> m_object_file;	
-			cc::array<cc::string> m_global_symbols;	
+			cc::UniquePtr<coff::ObjectFile> m_object_file;	
+			cc::Array<cc::String> m_global_symbols;	
 		private:
-			cc::array<ast_section*> gen_ast(asm_parser& parser);
+			cc::Array<AstSection*> gen_ast(AsmParser& parser);
 		};
 	}
 }

@@ -26,10 +26,10 @@ namespace cc {
 	typedef std::ptrdiff_t ptrdiff_t;
 
 	template <typename T>
-	using array = std::vector<T>;
+	using Array = std::vector<T>;
 
 	template <typename T, size_t SIZE>
-	using fixed_array = std::array<T, SIZE>;
+	using FixedArray = std::array<T, SIZE>;
 
 	// #todo ... maybe implement some form of abstract buffer class
 	// e.g. instead of having to use a cc::u8* pointer and hacky code
@@ -53,33 +53,33 @@ namespace cc {
 		cc::size_t length = str.size(); // returns 10.
 	*/
 
-	typedef std::string string;
-	typedef std::stringstream string_builder;
+	typedef std::string String;
+	typedef std::stringstream StringBuilder;
 
 	template <typename T>
-	using shared_ptr = std::shared_ptr<T>;
+	using SharedPtr = std::shared_ptr<T>;
 
 	template <typename T>
-	using unique_ptr = std::unique_ptr<T>;
+	using UniquePtr = std::unique_ptr<T>;
 
 	template <typename T>
-	using scoped_ptr = std::unique_ptr<T> const;
+	using ScopedPtr = std::unique_ptr<T> const;
 	
 	// #todo ... look at maybe having a cc::make_scoped<T>(Args&&... args);  function
 	// like make_unique and make_shared.
 
 	template <typename T, typename... Args>
-	shared_ptr<T> make_shared(Args&&... args) {
+	SharedPtr<T> make_shared(Args&&... args) {
 		return std::make_shared<T>(args...);
 	}
 
 	template <typename T, typename... Args>
-	unique_ptr<T> make_unique(Args&&... args) {
+	UniquePtr<T> make_unique(Args&&... args) {
 		return std::make_unique<T>(args...);
 	}
 
 	template <typename T>
-	struct singleton {
+	struct Singleton {
 		static T* instance() {
 			static T t;
 			return &t;
@@ -87,29 +87,29 @@ namespace cc {
 	};
 
 	template <typename... Args>
-	string format_string(const string& str, const Args&... args);
+	String format_string(const String& str, const Args&... args);
 
-	struct env {
+	struct Env {
 		static const char newline = '\n';
 		static const char tab = '\t';
 	};
 
-	struct console : public singleton<console> {
+	struct Console : public Singleton<Console> {
 		template <typename... Args>
-		static void printlnf(const string& fmt, const Args&... args) {
-			std::cout << format_string(fmt, args...) << env::newline;
+		static void printlnf(const String& fmt, const Args&... args) {
+			std::cout << format_string(fmt, args...) << Env::newline;
 		}
 
 		static void print(char c) { std::cout << c; }
 
 		template <typename... Args>
-		static void printf(const string& fmt, const Args&... args) {
+		static void printf(const String& fmt, const Args&... args) {
 			std::cout << format_string(fmt, args...);
 		}
 
 		static void println(size_t num = 1) { 
 			for (size_t i = 0; i < num; ++i) {
-				std::cout << env::newline;
+				std::cout << Env::newline;
 			}
 
 			flush(); 

@@ -3,7 +3,7 @@
 
 using namespace cc::coff;
 
-section::section(cc::u8* sections_data) {
+Section::Section(cc::u8* sections_data) {
 	m_name.resize(8);
 	std::memcpy(&m_name[0], sections_data, 8);
 
@@ -23,14 +23,14 @@ section::section(cc::u8* sections_data) {
 	m_characteristics = extract_u32(sections_data, 36);
 }
 
-section::section()
+Section::Section()
 	: m_characteristics(0) {
 }
 
-cc::array<cc::u8> section::gen_section_header_bytes() {
+cc::Array<cc::u8> Section::gen_section_header_bytes() {
 	const cc::size_t kSectionHeaderSize = 8 + (4 * 7) + (2 * 2); // 40, broken down into corresponding element sizes.
 	
-	cc::array<cc::u8> buff(kSectionHeaderSize);
+	cc::Array<cc::u8> buff(kSectionHeaderSize);
 	
 	// Zero the name buffer first (because the name may not be the full 8 bytes and
 	// any section names with less than 8 characters should have the rest of the memory

@@ -19,5 +19,5 @@ namespace cc {
 	 * @param str The string to convert into a char buffer.
 	 * @return A non null terminated char buffer.
 	 */
-	cc::array<u8> string_to_char_array(const std::string& str);
+	cc::Array<u8> string_to_char_array(const std::string& str);
 }

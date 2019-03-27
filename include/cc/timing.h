@@ -6,10 +6,10 @@
 #include <chrono>
 
 namespace cc {
-	class time_block {
+	class TimeBlock {
 	public:
-		time_block(const std::function<void(float)>& end_callback);
-		~time_block();
+		TimeBlock(const std::function<void(float)>& end_callback);
+		~TimeBlock();
 
 	private:
 		std::chrono::steady_clock::time_point m_start;		

@@ -12,7 +12,7 @@
 
 namespace cc {
 	namespace x86 {
-		enum instruction_modifier {
+		enum EInstructionModifier {
 			kInsMod_None = 0,
 
 			// ModR/M byte uses only the R/M portion
@@ -58,7 +58,7 @@ namespace cc {
 			kInsMod_pI   = 1 << 24
 		};
 		
-		enum mnemonic {
+		enum EMnemonic {
 			kMov_r32imm32,
 			kAdd_rm32imm32,
 			kMov_r32rm32,
@@ -70,17 +70,17 @@ namespace cc {
 			kCall
 		};
 		
-		enum instruction_operands_def {
+		enum EInstructionOperandsDef {
 			kInsOps_rm32imm32 = 0,
 			kInsOps_r32rm32 = 1,
 			kInsOps_none = 2,
 			kInsOps_imm32 = 3
 		};
 
-		class instruction_def {
+		class InstructionDef {
 		public:
-			instruction_def(cc::u8 op, cc::size_t mod, const char* name, instruction_operands_def operands_def);
-			instruction_def() {}
+			InstructionDef(cc::u8 op, cc::size_t mod, const char* name, EInstructionOperandsDef operands_def);
+			InstructionDef() {}
 			
 			cc::u8 get_opcode() const { return m_op; }
 			cc::size_t get_modifiers() const { return m_mods; }
@@ -92,24 +92,24 @@ namespace cc {
 
 			cc::u8 get_extension_digit() const;
 			const char* get_name() const;
-			instruction_operands_def get_operands_def() const { return m_operands_def; }
+			EInstructionOperandsDef get_operands_def() const { return m_operands_def; }
 		private:
 			cc::u8 m_op;
 			cc::size_t m_mods;
 			const char* m_name;
-			instruction_operands_def m_operands_def;
+			EInstructionOperandsDef m_operands_def;
 		};
 
-		extern std::unordered_map<mnemonic, instruction_def> instructions_map;
+		extern std::unordered_map<EMnemonic, InstructionDef> instructions_map;
 
-		class instruction {
+		class Instruction {
 		public:
-			typedef cc::fixed_array<cc::u8, 15> instruction_buffer;
+			typedef cc::FixedArray<cc::u8, 15> instruction_buffer;
 
-			static instruction make_reg_imm_op(mnemonic op, const cc::x86::gp_register& reg, cc::u32 data);
-			static instruction make_2reg_op(mnemonic op, const cc::x86::gp_register& reg0, const cc::x86::gp_register& reg1);
-			static instruction make_op(mnemonic op);
-			static instruction make_imm32_op(mnemonic op, cc::u32 value);			
+			static Instruction make_reg_imm_op(EMnemonic op, const cc::x86::GeneralPurposeRegister& reg, cc::u32 data);
+			static Instruction make_2reg_op(EMnemonic op, const cc::x86::GeneralPurposeRegister& reg0, const cc::x86::GeneralPurposeRegister& reg1);
+			static Instruction make_op(EMnemonic op);
+			static Instruction make_imm32_op(EMnemonic op, cc::u32 value);			
 			cc::size_t size() const { return m_size; }
 			instruction_buffer& data() { return m_data; }
 
@@ -118,17 +118,17 @@ namespace cc {
 			cc::size_t m_size;
 		};
 
-		class instructions_collection {
+		class InstructionsCollection {
 		public:
-			typedef cc::array<instruction> arr_type;
+			typedef cc::Array<Instruction> arr_type;
 			
-			instructions_collection(const std::initializer_list<cc::x86::instruction>& instructions);
-			instructions_collection();
+			InstructionsCollection(const std::initializer_list<cc::x86::Instruction>& instructions);
+			InstructionsCollection();
 
-			cc::array<cc::u8> combine();
+			cc::Array<cc::u8> combine();
 			cc::size_t get_count() const { return m_instructions.size(); }	
-			void add(const instruction& ins);
-			void add(const cc::array<instruction>& instructions);	
+			void add(const Instruction& ins);
+			void add(const cc::Array<Instruction>& instructions);	
 			
 			cc::size_t offset_of_instruction(cc::size_t index);
 
@@ -141,7 +141,7 @@ namespace cc {
 			arr_type::const_iterator cend() const { return m_instructions.cend(); }
 
 		private:
-			cc::array<instruction> m_instructions;
+			cc::Array<Instruction> m_instructions;
 		};
 	}
 }

@@ -11,13 +11,13 @@ using namespace cc::coff;
 		MSB -> complex_type
 */
 
-cc::u16 symbol_type::get_type() {
+cc::u16 SymbolType::get_type() {
 	return base_type | (complex_type << 4);
 }
 
 static const cc::size_t kMaxSymbolNameLength = 8;
 
-symbol_name::symbol_name(cc::string str) {
+SymbolName::SymbolName(cc::String str) {
 	// #todo (bwilks) fix this.
 	// requires implementation of the string table, so ties in with other todos.
 	ASSERT(str.length() <= kMaxSymbolNameLength, "Only symbol names with a length <= 8 characters are supported.")
@@ -26,13 +26,13 @@ symbol_name::symbol_name(cc::string str) {
 	std::memcpy(&m_data, str.data(), str.length());
 }
 
-symbol_name symbol_name::from_buff(cc::u8* buff) {
-	symbol_name name;
+SymbolName SymbolName::from_buff(cc::u8* buff) {
+	SymbolName name;
 	std::memcpy(&name.m_data, buff, kMaxSymbolNameLength);
 	return name;
 }
 
-symbol_type::symbol_type(const cc::u16& type) {
+SymbolType::SymbolType(const cc::u16& type) {
 	/*
 		#define N_BTMASK                            0x000F
 		#define N_TMASK                             0x0030
@@ -56,27 +56,27 @@ symbol_type::symbol_type(const cc::u16& type) {
 	complex_type = (type & 0x0030) >> 4;
 }
 
-bool symbol_name::uses_short_name() {
+bool SymbolName::uses_short_name() {
 	return m_data.long_name.zeroes != 0;
 }
 
-cc::string symbol_name::get_short_name() {
-	return cc::string(m_data.short_name, m_data.short_name + kMaxSymbolNameLength);
+cc::String SymbolName::get_short_name() {
+	return cc::String(m_data.short_name, m_data.short_name + kMaxSymbolNameLength);
 }
 
-cc::u32 symbol_name::get_long_name_string_table_offset() {
+cc::u32 SymbolName::get_long_name_string_table_offset() {
 	return m_data.long_name.offset;
 }
 
-cc::array<cc::u8> symbol::write_to_buffer() {
+cc::Array<cc::u8> Symbol::write_to_buffer() {
 	const cc::size_t kSymbolHeaderSize = 18;
 
-	cc::array<cc::u8> buffer;
+	cc::Array<cc::u8> buffer;
 	buffer.resize(kSymbolHeaderSize);
 	
 	ASSERT(name.uses_short_name(), "Symbol names must be <= 8 characters, so that the symbol name can always be encoded in the symbol table.");
 
-	cc::string name_str = name.get_short_name();
+	cc::String name_str = name.get_short_name();
 	
 	std::memcpy(buffer.data(), name_str.data(), 8);
 	std::memcpy(buffer.data() + 8, &value, 4);
@@ -91,11 +91,11 @@ cc::array<cc::u8> symbol::write_to_buffer() {
 	return buffer;
 }
 
-symbol symbol::from_buff(cc::u8* buff) {
-	symbol sym;
+Symbol Symbol::from_buff(cc::u8* buff) {
+	Symbol sym;
 	
 	// Symbol Name, Offset: 0, Size: 8
-	sym.name = symbol_name::from_buff(buff);
+	sym.name = SymbolName::from_buff(buff);
 	
 	// Value, Offset: 8, Size: 4
 	// How this value is interpreted depends on the Section Number and
@@ -112,7 +112,7 @@ symbol symbol::from_buff(cc::u8* buff) {
 	// Type, Offset: 14, Size 2
 	cc::u16 symbol_type_tmp = 0;
 	std::memcpy(&symbol_type_tmp, buff + 14, 2);
-	sym.type = symbol_type(symbol_type_tmp);
+	sym.type = SymbolType(symbol_type_tmp);
 
 	// Storage Class, Offset: 16, Size: 1
 	std::memcpy(&sym.storage_clss, buff + 16, 1);
@@ -123,7 +123,7 @@ symbol symbol::from_buff(cc::u8* buff) {
 	return sym;
 }
 
-symbol_table::symbol_table(cc::u8* read_buff, cc::u32 nsymbols) {
+SymbolTable::SymbolTable(cc::u8* read_buff, cc::u32 nsymbols) {
 	const cc::u32 kSymbolRecordSize = 18; // bytes
 	
 	m_symbols.reserve(nsymbols);
@@ -140,7 +140,7 @@ symbol_table::symbol_table(cc::u8* read_buff, cc::u32 nsymbols) {
 			is_aux_record = true;
 		}
 		
-		symbol sym = symbol::from_buff(read_buff + symbol_record_offset);
+		Symbol sym = Symbol::from_buff(read_buff + symbol_record_offset);
 		sym.is_aux = is_aux_record;
 		
 		// If this record has any preceding auxillary records then, store how many
@@ -157,12 +157,12 @@ symbol_table::symbol_table(cc::u8* read_buff, cc::u32 nsymbols) {
 	}
 }
 
-cc::array<cc::u8> symbol_table::write_to_buffer()
+cc::Array<cc::u8> SymbolTable::write_to_buffer()
 {
-	cc::array<cc::u8> buff;
+	cc::Array<cc::u8> buff;
 	
-	for (symbol& sym : m_symbols) {
-		cc::array<cc::u8> sym_buff = sym.write_to_buffer();
+	for (Symbol& sym : m_symbols) {
+		cc::Array<cc::u8> sym_buff = sym.write_to_buffer();
 		ASSERT(sym_buff.size() == 18, "Symbol defintion buffer must be 18 bytes in size")
 		
 		buff.insert(buff.end(), sym_buff.begin(), sym_buff.end());

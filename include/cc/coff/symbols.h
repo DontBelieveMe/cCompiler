@@ -4,7 +4,7 @@
 
 namespace cc {
 	namespace coff {
-		enum base_data_type {
+		enum EBaseDataType {
 			kImageSymTypeNull = 0,
 			kImageSymTypeVoid = 1,
 			kImageSymTypeChar = 2,
@@ -23,14 +23,14 @@ namespace cc {
 			kImageSymTypeDWORD = 15
 		};
 
-		enum complex_type {
+		enum EComplexType {
 			kImageSymDtypeNull = 0,
 			kImageSymDtypePointer = 1,
 			kImageSymDtypeFunction = 2,
 			kImageSymDtypeArray = 3
 		};
 
-		enum storage_class {
+		enum EStorageClass {
 			kImageSymClassEndOfFunction = 0xFF,
 			kImageSymClassNull = 0,
 			kImageSymClassAutomatic = 1,
@@ -60,31 +60,31 @@ namespace cc {
 			kImageSymClassCLRToken = 106
 		};
 
-		struct symbol_type {
+		struct SymbolType {
 			cc::u8 complex_type;
 			cc::u8 base_type;
 
-			symbol_type(const cc::u8& base_type, const cc::u8& complex_type)
+			SymbolType(const cc::u8& base_type, const cc::u8& complex_type)
 				: base_type(base_type), complex_type(complex_type) {}
 
-			symbol_type()
+			SymbolType()
 				: base_type(0), complex_type(0) {}
 
-			symbol_type(const cc::u16& type);
+			SymbolType(const cc::u16& type);
 
 			cc::u16 get_type();
 		};
 
-		class symbol_name {
+		class SymbolName {
 		public:
-			static symbol_name from_buff(cc::u8* buff);
+			static SymbolName from_buff(cc::u8* buff);
 			
-			symbol_name(cc::string str);
-			symbol_name(){}
+			SymbolName(cc::String str);
+			SymbolName(){}
 
 			bool uses_short_name();
 			
-			cc::string get_short_name();
+			cc::String get_short_name();
 			cc::u32    get_long_name_string_table_offset();
 
 		private:
@@ -97,32 +97,32 @@ namespace cc {
 			} m_data;
 		};
 
-		struct symbol {
-			static symbol from_buff(cc::u8* buff);
+		struct Symbol {
+			static Symbol from_buff(cc::u8* buff);
 
-			symbol_name name;
+			SymbolName name;
 			cc::u32 value;
 			cc::u16 section_number;
-			symbol_type type;
+			SymbolType type;
 			cc::u8 storage_clss;
 			cc::u8 number_of_aux_symbols;
 			bool is_aux;
 
-			cc::array<cc::u8> write_to_buffer();
+			cc::Array<cc::u8> write_to_buffer();
 		};
 
-		class symbol_table {
+		class SymbolTable {
 		private:
-			cc::array<symbol> m_symbols;
+			cc::Array<Symbol> m_symbols;
 
 		public:
-			symbol_table(cc::u8* read_buff, cc::u32 nsymbols);
-			symbol_table(){}
+			SymbolTable(cc::u8* read_buff, cc::u32 nsymbols);
+			SymbolTable(){}
 
-			void add_symbol(const symbol& sym) { m_symbols.push_back(sym); }
+			void add_symbol(const Symbol& sym) { m_symbols.push_back(sym); }
 
-			cc::array<cc::u8> write_to_buffer();
-			cc::array<symbol>& symbols() { return m_symbols; }
+			cc::Array<cc::u8> write_to_buffer();
+			cc::Array<Symbol>& symbols() { return m_symbols; }
 		};
 	}
 }

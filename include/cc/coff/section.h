@@ -4,7 +4,7 @@
 
 namespace cc {
 	namespace coff {
-		enum section_characteristics {
+		enum ESectionCharacteristics {
 			kImageScn_RESERVED0 = 0x00000000,
 			kImageScn_RESERVED1 = 0x00000001,
 			kImageScn_RESERVED2 = 0x00000002,
@@ -47,7 +47,7 @@ namespace cc {
 			kImageScnMemWrite = 0x80000000
 		};
 
-		class section {
+		class Section {
 		public:
 			struct reloc_table {
 				cc::u32 virtual_addr;
@@ -55,39 +55,39 @@ namespace cc {
 				cc::u16 type; // #todo ... fill in type indicators for each platform
 			};
 
-			section(cc::u8* sections_data);
-			section();
+			Section(cc::u8* sections_data);
+			Section();
 
-			const cc::string& name() { return m_name; }
+			const cc::String& name() { return m_name; }
 			
-			cc::array<cc::u8>& raw_data() { return m_raw_data; }
+			cc::Array<cc::u8>& raw_data() { return m_raw_data; }
 
-			section& set_name(const cc::string& name) {
+			Section& set_name(const cc::String& name) {
 				m_name = name;
 				return *this;
 			}
 
-			section& set_raw_data(const cc::array<cc::u8>& data) {
+			Section& set_raw_data(const cc::Array<cc::u8>& data) {
 				m_raw_data = data;
 				return *this;
 			}
 
-			section& set_characteristics(cc::u32 characteristics) {
+			Section& set_characteristics(cc::u32 characteristics) {
 				m_characteristics = characteristics;
 				return *this;
 			}
 
-			section& set_raw_data_offset(cc::u32 offset) {
+			Section& set_raw_data_offset(cc::u32 offset) {
 				m_raw_data_offset = offset;
 				return *this;
 			}
 
-			cc::array<cc::u8> gen_section_header_bytes();
+			cc::Array<cc::u8> gen_section_header_bytes();
 
 		private:
-			cc::string m_name;
+			cc::String m_name;
 
-			cc::array<cc::u8> m_raw_data;
+			cc::Array<cc::u8> m_raw_data;
 			cc::u32 m_raw_data_offset;
 
 			cc::u32 m_virtual_size, m_virtual_addr;

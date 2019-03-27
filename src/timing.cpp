@@ -3,13 +3,13 @@
 
 using namespace cc;
 
-time_block::time_block(const std::function<void(float)>& end_callback)
+TimeBlock::TimeBlock(const std::function<void(float)>& end_callback)
 	: m_end_callback(end_callback) {
 	
 	m_start = std::chrono::steady_clock::now();
 }
 
-time_block::~time_block() {
+TimeBlock::~TimeBlock() {
 	auto end = std::chrono::steady_clock::now();
 	std::chrono::duration<float> delta_seconds = end - m_start;
 	m_end_callback(delta_seconds.count());

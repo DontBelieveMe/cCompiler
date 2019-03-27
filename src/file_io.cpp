@@ -6,11 +6,11 @@
 #include <cc/mem_utils.h>
 using namespace cc;
 
-file::file(const std::string& filepath) 
+File::File(const std::string& filepath) 
 	: m_filepath(filepath) {
 }
 
-cc::u8* file::read(cc::file_type type) {
+cc::u8* File::read(cc::EFileType type) {
 	const char* mode = (type == cc::kFileModeBinary) ? "rb" : "r";
 	std::FILE* file = std::fopen(m_filepath.c_str(), mode);
 
@@ -34,7 +34,7 @@ cc::u8* file::read(cc::file_type type) {
 	}
 }
 
-void file::write(u8* data, size_t size, cc::file_type type) {
+void File::write(u8* data, size_t size, cc::EFileType type) {
 	const char* mode = (type == cc::kFileModeBinary) ? "wb" : "w";
 
 	std::FILE *file = std::fopen(m_filepath.c_str(), mode);

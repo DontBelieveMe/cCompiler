@@ -3,15 +3,15 @@
 namespace cc {
 	namespace fmt_impl {
 		template <int ArrSize>
-		void to_string_array(fixed_array<string, ArrSize>& str_array, int& index)
+		void to_string_array(FixedArray<String, ArrSize>& str_array, int& index)
 		{
 			(void)str_array; (void)index;
 		}
 
 		template <int ArrSize, typename T, typename... Args>
-		void to_string_array(fixed_array<string, ArrSize>& str_array, int& index, const T& item, const Args&... args)
+		void to_string_array(FixedArray<String, ArrSize>& str_array, int& index, const T& item, const Args&... args)
 		{
-			string_builder ss;
+			StringBuilder ss;
 			ss << item;
 
 			str_array[index++] = ss.str();
@@ -19,7 +19,7 @@ namespace cc {
 		}
 
 		template <int ArrSize, typename... Args>
-		void to_string_array(fixed_array<string, ArrSize>& arr, const Args&... args)
+		void to_string_array(FixedArray<String, ArrSize>& arr, const Args&... args)
 		{
 			int i = 0;
 			to_string_array(arr, i, args...);
@@ -30,16 +30,16 @@ namespace cc {
 	// to this method, and still compile.
 	// Initially implemented for assertion macros - no need to specify additional message, but you can
 	// and it will format correctly as a format string.
-	inline string format_string() { return ""; }
+	inline String format_string() { return ""; }
 
 	// #todo: implement -> complete format syntax checking
 	template <typename... Args>
-	string format_string(const string& fmt, const Args&... args)
+	String format_string(const String& fmt, const Args&... args)
 	{
-		fixed_array<string, sizeof...(args)> args_array;
+		FixedArray<String, sizeof...(args)> args_array;
 		fmt_impl::to_string_array(args_array, args...);
 
-		string_builder buff;
+		StringBuilder buff;
 		for (size_t i = 0; i < fmt.length(); ++i)
 		{
 			char currentchar = fmt[i];
@@ -59,7 +59,7 @@ namespace cc {
 					continue;
 				}
 
-				string index_string;
+				String index_string;
 				while (currentchar != '}')
 				{
 					currentchar = fmt[++i];
