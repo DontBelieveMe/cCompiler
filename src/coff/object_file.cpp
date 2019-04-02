@@ -106,7 +106,7 @@ void ObjectFile::write_to_file(const cc::String& filepath) {
 	
 	// Calculate the offsets for the raw data of each section.
 	// Also add the sections table to the buffer.
-	for (cc::SharedPtr<section>& section : m_sections) {
+	for (cc::SharedPtr<Section>& section : m_sections) {
 		section->set_raw_data_offset(raw_dat_offset);
 		
 		cc::Array<cc::u8> section_header = section->gen_section_header_bytes();
@@ -116,7 +116,7 @@ void ObjectFile::write_to_file(const cc::String& filepath) {
 	}
 
 	// Add in each each sections raw data after the sections table.
-	for (cc::SharedPtr<section>& section : m_sections) {
+	for (cc::SharedPtr<Section>& section : m_sections) {
 		cc::Array<cc::u8> dat = section->raw_data();
 		buffer.insert(buffer.end(), dat.begin(), dat.end());
 	}
