@@ -15,7 +15,15 @@ const char* InstructionDef::get_name() const {
 	return m_name;
 }
 
-std::unordered_map<cc::x86::EMnemonic, cc::x86::InstructionDef> cc::x86::instructions_map = {
+#define START_DEF_INSTRUCTIONS std::unordered_map<cc::x86::EMnemonic, cc::x86::InstructionDef> cc::x86::instructions_map = 
+#define INSTRUCTION(_name, _enum, _opcode, _mod, _operands) { _enum, InstructionDef(_opcode, _mod, #_name, _operands) }
+
+START_DEF_INSTRUCTIONS
+{
+	INSTRUCTION(add, kMov_r32imm32, 0xB8, kInsMod_pRd | kInsMod_id, kInsOps_rm32imm32),
+};
+
+/*std::unordered_map<cc::x86::EMnemonic, cc::x86::InstructionDef> cc::x86::instructions_map = {
 	{ kMov_r32imm32, InstructionDef(0xB8, kInsMod_pRd | kInsMod_id, "mov", kInsOps_rm32imm32) },
 	{ kMov_r32rm32,  InstructionDef(0x8B, kInsMod_r, "mov", kInsOps_r32rm32) },
 
@@ -28,7 +36,7 @@ std::unordered_map<cc::x86::EMnemonic, cc::x86::InstructionDef> cc::x86::instruc
 	{ kSub_rm32imm32, InstructionDef(0x81, kInsMod_Ext5 | kInsMod_id, "sub", kInsOps_rm32imm32) },
 	{ kSub_r32rm32,   InstructionDef(0x2B, kInsMod_r, "sub", kInsOps_r32rm32) },
 	{ kCall, InstructionDef(0xE8, kInsMod_cw, "call", kInsOps_imm32) }
-};
+};*/
 
 bool InstructionDef::uses_extension_modifier() const {
 	return (m_mods & kInsMod_Ext0) || (m_mods & kInsMod_Ext1) ||
