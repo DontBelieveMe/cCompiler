@@ -8,7 +8,7 @@ project "cCompiler"
 	targetdir "build/bin/%{cfg.buildcfg}"
 	objdir "build/obj/%{cfg.buildcfg}"
 
-	files { "include/**.h", "src/**.cpp", "src/**.lua", "src/**.cdef" }
+	files { "include/**.h", "src/**.cpp", "src/**.js", "src/**.cdef" }
 	
 	includedirs { 
 		"include",
@@ -16,8 +16,8 @@ project "cCompiler"
 		"vendor/cxxopts"
 	}
 
-	include "src/x86/x86-gen.lua"
-	
+	os.execute("node src/x86/x86-gen.js")
+
 	filter "configurations:Debug"
 		defines { "DEBUG" }
 		symbols "On"

@@ -3,22 +3,11 @@
 #include <cc/stdlib.h>
 
 namespace cc {
-	enum EOperandType {
-		kRegisterOperand,
-		kMemoryOperand,
-		kRegisterMemoryOperand,
-		kImmediateOperand,
-		kRelativeOperand
-	};
-
-	struct Operand {
-		EOperandType type;
-	};
-
-	template <int NumOperands, int OpcodeSize>
 	struct Instruction {
-		Operand operands[NumOperands];
-		const char* mnemonic;
-		cc::u8 opcode[OpcodeSize];
+		std::string name;
+		std::uint8_t primary_opcode;
+		
+		std::uint8_t pp;
+		std::uint8_t mm;
 	};
 }

@@ -56,3 +56,45 @@ Addressing Modes (MOD)
 | Direct                         | 11     | Move value from source value to destination register (Specified by Reg & R/M sections) |
 ------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------
+|     ASMDB NOTES    |
+----------------------
+
+Opcode Format:
+	Two-byte opcode format
+		<Escape Opcode 0x0F>                                   <Second Opcode byte>
+		<Mandatory Prefix 0x66/0xF2/0xF3> <Escape Opcode byte> <Second Opcode byte>
+		
+		---------------------------------------------------------------------------
+		|           Escape Opcode (0x0F)       |        Primary Opcode Byte       |
+		---------------------------------------------------------------------------
+
+		OR
+
+		----------------------------------------------------------------------------------
+		| Mandatory Prefix (0x66/0xF2/0xF3) | Escape Opcode (0x0F) | Primary Opcode Byte |
+		----------------------------------------------------------------------------------
+
+	Three-byte opcode format
+		<Escape Opcode 0x0F>                                   <Two more Opcode bytes>
+		<Mandatory Prefix 0x66/0xF2/0xF3> <Escape Opcode byte> <Two more Opcode bytes>
+
+		------------------------------------------------------------------------------
+		|   Escape Opcode (0x0F)    | Primary Opcode Byte 1 | Primary Opcode Byte 2  |
+		------------------------------------------------------------------------------
+
+		OR
+
+		--------------------------------------------------------------------------------------------------
+		| Mandatory Prefix (0x66/0xF2/0xF3) | Escape Opcode (0x0F) | Primary Opcode 1 | Primary Opcode 2 |
+		--------------------------------------------------------------------------------------------------
+
+asmdb documentation:
+
+{
+	"name": // Instruction mnemonic (name)
+	"arch": // Architecture (X86/X64/ANY)
+	"pp" (Mandatory Prefix)
+	"mm" (Escape Opcode)
+
+}
