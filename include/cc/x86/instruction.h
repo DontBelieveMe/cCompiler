@@ -2,6 +2,7 @@
 
 #include <cc/stdlib.h>
 #include <cc/x86/gp_register.h>
+#include <cc/cdef_api.h>
 
 #include <unordered_map>
 
@@ -109,7 +110,8 @@ namespace cc {
 			static Instruction make_reg_imm_op(EMnemonic op, const cc::x86::GeneralPurposeRegister& reg, cc::u32 data);
 			static Instruction make_2reg_op(EMnemonic op, const cc::x86::GeneralPurposeRegister& reg0, const cc::x86::GeneralPurposeRegister& reg1);
 			static Instruction make_op(EMnemonic op);
-			static Instruction make_imm32_op(EMnemonic op, cc::u32 value);			
+			static Instruction make_imm32_op(EMnemonic op, cc::u32 value);
+
 			cc::size_t size() const { return m_size; }
 			instruction_buffer& data() { return m_data; }
 

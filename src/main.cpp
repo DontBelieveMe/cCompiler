@@ -11,7 +11,7 @@
 #include <cxxopts/cxxopts.hpp>
 
 int main(int argc, char** argv) {
-	using namespace cc::x86;
+	/*using namespace cc::x86;
 	using namespace cc;
 	using namespace coff;
 	using namespace cc::assembly;
@@ -36,6 +36,6 @@ int main(int argc, char** argv) {
 	}
 	else {
 		CFATAL("Found errors - not writing object file");
-	}
+	}*/
 	return 0;
 }
