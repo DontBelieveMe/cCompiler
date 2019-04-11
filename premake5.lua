@@ -8,15 +8,13 @@ project "cCompiler"
 	targetdir "build/bin/%{cfg.buildcfg}"
 	objdir "build/obj/%{cfg.buildcfg}"
 
-	files { "include/**.h", "src/**.cpp", "src/**.js", "src/**.cdef" }
+	files { "include/**.h", "src/**.cpp" }
 	
 	includedirs { 
 		"include",
 		"vendor/spdlog/include",
 		"vendor/cxxopts"
 	}
-
-	os.execute("node src/x86/x86-gen.js")
 
 	filter "configurations:Debug"
 		defines { "DEBUG" }
