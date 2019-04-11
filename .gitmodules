@@ -1,6 +1,0 @@
-[submodule "tools/asmdb"]
-	path = tools/asmdb
-	url = https://github.com/asmjit/asmdb.git
-[submodule "vendor/json.lua"]
-	path = vendor/json.lua
-	url = https://github.com/rxi/json.lua.git
