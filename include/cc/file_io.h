@@ -9,19 +9,22 @@ namespace cc
 	class File
 	{
 	public:
-		enum class EReadMode
+		enum class EIOMode
 		{
-			Binary,
-			Text
+			ReadBinary,
+			ReadText,
+			WriteBinary,
+			WriteText
 		};
 
-		void Open(const char* filepath, File::EReadMode mode);
+		void Open(const char* filepath, File::EIOMode mode);
 		void Read();
+		void Write(u8* data, std::size_t size);
 		void Close();
 		
 		/// Return the read file data (only valid if read(...) has been called, if not nullptr will be returned)
 		u8* Data() { return m_data; }
-		
+	
 		/// Return if the file is currently open. False if tried to open a file that doesn't exist.
 		bool IsOpen() const { return m_open; }
 
@@ -37,8 +40,9 @@ namespace cc
 		std::FILE*  m_filehandle  = nullptr;
 		long        m_filesize    = 0;
 		std::size_t m_buffersize  = 0;
-		EReadMode   m_readmode;
+		EIOMode   m_readmode;
 	};
 
-	File ReadFile(const char* filepath, File::EReadMode mode);
+	File ReadFile(const char* filepath, File::EIOMode mode);
+	void WriteFile(const char* filepath, File::EIOMode mode, u8* data, std::size_t size);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "int_types.h"
+#include "../int_types.h"
+#include "../datetime.h"
 
 namespace cc
 {
@@ -11,12 +12,18 @@ namespace cc
 	private:
 		ECoffMachineType m_machine;
 		u16              m_num_sections;
-		u32              m_datetime_created;
+		DateTime         m_datetime_created;
 		u32              m_symbol_table_ptr;
 		u32              m_num_symbols;
 		u16              m_characteristics;
 
 	public:
+		void Machine(ECoffMachineType machine) { m_machine = machine; }
+		ECoffMachineType Machine() const { return m_machine; }
+
+		void TimeStamp(DateTime timestamp) { m_datetime_created = timestamp; }
+		DateTime TimeStamp() const { return m_datetime_created; }
+
 		void ReadFromFile(const char* filepath);
 		void WriteToFile(const char* filepath);
 	};

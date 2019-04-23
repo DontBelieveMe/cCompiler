@@ -49,3 +49,19 @@ void ReadBuffer::Advance(std::size_t advance_by)
 	assert((m_ptr + advance_by) - m_start < static_cast<std::ptrdiff_t>(m_count));
 	m_ptr += advance_by;
 }
+
+WriteBuffer::WriteBuffer(std::size_t initial_capacity)
+	: m_capacity(initial_capacity), m_size(initial_capacity)
+{
+	m_buffer = new u8[initial_capacity];
+}
+
+WriteBuffer::WriteBuffer()
+	: m_buffer(nullptr), m_size(0), m_capacity(0)
+{ }
+
+WriteBuffer::~WriteBuffer()
+{
+	delete [] m_buffer;
+	m_buffer = nullptr;
+}

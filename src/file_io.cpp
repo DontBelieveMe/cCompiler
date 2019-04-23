@@ -7,7 +7,20 @@
 #include <cassert>
 #include <cstdio>
 
-cc::File cc::ReadFile(const char* filepath, cc::File::EReadMode mode)
+using namespace cc;
+
+void cc::WriteFile(const char* filepath, File::EIOMode mode, u8* data, std::size_t size)
+{
+	cc::File file;
+	file.Open(filepath, mode);
+
+	if(file.IsOpen())
+	{
+		file.Write(data, size);
+	}
+}
+
+cc::File cc::ReadFile(const char* filepath, cc::File::EIOMode mode)
 {
 	cc::File file;
 	file.Open(filepath, mode);
@@ -20,9 +33,19 @@ cc::File cc::ReadFile(const char* filepath, cc::File::EReadMode mode)
 	return file;
 }
 
-void cc::File::Open(const char* filepath, File::EReadMode mode)
+void cc::File::Open(const char* filepath, File::EIOMode mode)
 {
-	const char* mode_string = (mode == cc::File::EReadMode::Binary) ? "rb" : "r";
+	const char* mode_string = nullptr;
+	switch(mode)
+	{
+	case EIOMode::ReadBinary: mode_string = "rb"; break;
+	case EIOMode::ReadText: mode_string = "r"; break;
+	case EIOMode::WriteBinary: mode_string = "wb"; break;
+	case EIOMode::WriteText: mode_string = "w"; break;
+	default: mode_string = nullptr;
+	}
+
+	assert(mode_string);
 
 	m_filehandle = std::fopen(filepath, mode_string);
 	m_readmode = mode;	
@@ -40,13 +63,25 @@ void cc::File::Open(const char* filepath, File::EReadMode mode)
 	}
 }
 
+void cc::File::Write(u8* data, std::size_t size)
+{
+	assert(m_readmode == EIOMode::WriteText || m_readmode == EIOMode::WriteBinary);
+
+	if(m_open)
+	{
+		std::fwrite(data, sizeof(cc::u8), size, m_filehandle);
+	}
+}
+
 void cc::File::Read()
 {
+	assert(m_readmode == EIOMode::ReadText || m_readmode == EIOMode::ReadBinary);
+
 	if(m_open)
 	{
 		long alloc_size = m_filesize;
 
-		if (m_readmode == EReadMode::Text)
+		if (m_readmode == EIOMode::ReadText)
 		{
 			alloc_size = alloc_size + 1;
 		}
@@ -55,7 +90,7 @@ void cc::File::Read()
 
 		std::size_t read_bytes = std::fread(m_data, sizeof(u8), m_filesize, m_filehandle);
 
-		if (m_readmode == EReadMode::Text)
+		if (m_readmode == EIOMode::ReadText)
 		{
 			m_data[read_bytes] = 0;
 		}

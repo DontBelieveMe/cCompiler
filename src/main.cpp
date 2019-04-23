@@ -3,7 +3,7 @@
 #include <cc/file_io.h>
 #include <cc/logging.h>
 #include <cc/os.h>
-#include <cc/coff.h>
+#include <cc/coff/coff.h>
 
 #include <cxxopts/cxxopts.hpp>
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	
 	cc::CoffObjectFile object_file;
 	object_file.ReadFromFile(input_file.c_str());
-
+	object_file.WriteToFile("data/TEST_OUTPUT.txt");
 	cc::TryKeepConsoleOpen();
 	return 0;
 }
