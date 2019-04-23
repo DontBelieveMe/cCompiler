@@ -565,13 +565,37 @@ namespace cxxopts
         {
           throw argument_incorrect_type(text);
         }
-
-        if (umax - digit < result * base)
+		
+		/*********************************************************
+		 * BWILKS EDIT 23/04/2019
+		 *
+		 * Changed:
+		 * 		... umax - digit < result * ...
+		 * to
+		 * 		... umax - static_cast<US>(digit) < result * ...
+		 *
+		 * in order to fix MSVC warning C4018
+		 * 		signed/unsigned mismatch
+		 * ******************************************************
+		 */
+        if (umax - static_cast<US>(digit) < result * base)
         {
           throw argument_incorrect_type(text);
         }
-
-        result = result * base + digit;
+	
+		/***********************************************************
+		 * BWILKS EDIT 23/04/19
+		 *
+		 * Changed:
+		 * 		... * base + digit
+		 * to
+		 * 		... * base + static_cast<US>(digit)
+		 *
+		 * in order to fix MSVC warning C4267:
+		 * 		convertsion from size_t to US, possible loss of data.
+		 * **********************************************************
+		 */
+        result = result * base + static_cast<US>(digit);
       }
 
       detail::check_signed_range<T>(negative, result, text);

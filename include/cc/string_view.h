@@ -1,31 +1,35 @@
 #pragma once
 
+#include <cstddef>
+#include <cstring>
+
 namespace cc
 {
-	class string_view
+	class StringView
 	{
 	private:
+		const char* m_str;
+		std::size_t m_count;
+
 	public:
-		typedef value_type char;
-		typedef pointer char*;
-		typedef const_pointer const char*;
-		typedef reference char&;
-		typedef const_reference 
+		StringView() noexcept
+			: m_str(nullptr), m_count(0)
+		{ }
 
-		string_view() noexcept
+		StringView(const StringView& other)
 		{
+			m_str = other.m_str;
+			m_count = other.m_count;
 		}
 
-		string_view(const string_view& other)
-		{
-		}
+		StringView(const char* s, std::size_t count)
+			: m_str(s), m_count(count)
+		{ }
 
-		string_view(const char* s, size_type count)
+		StringView(const char* s)
+			: m_str(s)
 		{
+			m_count = std::strlen(s);
 		}
-
-		string_view(const char* s)
-		{
-		}
-	}
+	};
 }

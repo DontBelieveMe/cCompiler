@@ -1,24 +1,28 @@
+#ifdef _WIN32
+	#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <cc/file_io.h>
 
 #include <cassert>
 #include <cstdio>
 
-cc::file cc::read_file(const char* filepath, cc::file::read_mode mode)
+cc::File cc::ReadFile(const char* filepath, cc::File::EReadMode mode)
 {
-	cc::file file;
-	file.open(filepath, mode);
+	cc::File file;
+	file.Open(filepath, mode);
 
-	if(file.is_open())
+	if(file.IsOpen())
 	{
-		file.read();
+		file.Read();
 	}
 
 	return file;
 }
 
-void cc::file::open(const char* filepath, file::read_mode mode)
+void cc::File::Open(const char* filepath, File::EReadMode mode)
 {
-	const char* mode_string = (mode == cc::file::read_mode::binary) ? "rb" : "r";
+	const char* mode_string = (mode == cc::File::EReadMode::Binary) ? "rb" : "r";
 
 	m_filehandle = std::fopen(filepath, mode_string);
 	m_readmode = mode;	
@@ -36,13 +40,13 @@ void cc::file::open(const char* filepath, file::read_mode mode)
 	}
 }
 
-void cc::file::read()
+void cc::File::Read()
 {
 	if(m_open)
 	{
 		long alloc_size = m_filesize;
 
-		if (m_readmode == read_mode::text)
+		if (m_readmode == EReadMode::Text)
 		{
 			alloc_size = alloc_size + 1;
 		}
@@ -51,7 +55,7 @@ void cc::file::read()
 
 		std::size_t read_bytes = std::fread(m_data, sizeof(u8), m_filesize, m_filehandle);
 
-		if (m_readmode == read_mode::text)
+		if (m_readmode == EReadMode::Text)
 		{
 			m_data[read_bytes] = 0;
 		}
@@ -60,7 +64,7 @@ void cc::file::read()
 	}
 }
 
-void cc::file::close()
+void cc::File::Close()
 {
 	if(m_open)
 	{

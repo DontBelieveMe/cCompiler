@@ -5,9 +5,9 @@
 
 using namespace cc;
 
-std::shared_ptr<spdlog::logger> logger::s_logger;
+std::shared_ptr<spdlog::logger> Logger::s_logger;
 
-void logger::startup()
+void Logger::Startup()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 	s_logger = spdlog::stdout_color_mt("cCompiler");

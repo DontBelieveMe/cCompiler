@@ -4,29 +4,29 @@
 #include <memory>
 
 #ifdef DEBUG
-	#define CTRACE(...) cc::logger::get_spdlog_logger()->trace(__VA_ARGS__)
-	#define CDEBUG(...) cc::logger::get_spdlog_logger()->debug(__VA_ARGS__)
+	#define CTRACE(...) cc::Logger::GetSpdlogLogger()->trace(__VA_ARGS__)
+	#define CDEBUG(...) cc::Logger::GetSpdlogLogger()->debug(__VA_ARGS__)
 #else
 	#define CTRACE(...)((void)0)
 	#define CDEBUG(...) ((void)0)
 #endif
 
-#define CINFO(...) cc::logger::get_spdlog_logger()->info(__VA_ARGS__)
-#define CWARN(...) cc::logger::get_spdlog_logger()->warn(__VA_ARGS__)
-#define CERROR(...) cc::logger::get_spdlog_logger()->error(__VA_ARGS__)
-#define CFATAL(...) cc::logger::get_spdlog_logger()->critical(__VA_ARGS__)
+#define CINFO(...) cc::Logger::GetSpdlogLogger()->info(__VA_ARGS__)
+#define CWARN(...) cc::Logger::GetSpdlogLogger()->warn(__VA_ARGS__)
+#define CERROR(...) cc::Logger::GetSpdlogLogger()->error(__VA_ARGS__)
+#define CFATAL(...) cc::Logger::GetSpdlogLogger()->critical(__VA_ARGS__)
 
 namespace cc
 {
-	class logger
+	class Logger
 	{
 	private:
 		static std::shared_ptr<spdlog::logger> s_logger;
 
 	public:
-		static void startup();
+		static void Startup();
 
-		static const std::shared_ptr<spdlog::logger>& get_spdlog_logger()
+		static const std::shared_ptr<spdlog::logger>& GetSpdlogLogger()
 			{ return s_logger; }
 	};
 }
