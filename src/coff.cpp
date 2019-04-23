@@ -20,6 +20,13 @@ void CoffObjectFile::ReadFromFile(const char* filepath)
 	const u16 opt_header_size  = data_buffer.ReadNext<u16>();
 	const u16 characteristics  = data_buffer.ReadNext<u16>();
 	
+	m_machine          = static_cast<ECoffMachineType>(machine);
+	m_num_sections     = num_sections;
+	m_datetime_created = time_date;
+	m_symbol_table_ptr = symbol_table_ptr;
+	m_num_symbols      = num_symbols;
+	m_characteristics  = characteristics;
+
 	// ----------------------------------------------------
 	// Basic sanity checks, according to constraints set by
 	// COFF standard
@@ -27,24 +34,18 @@ void CoffObjectFile::ReadFromFile(const char* filepath)
 	
 	assert(opt_header_size == 0);
 	assert(num_sections <= 96);
+	assert(m_machine == ECoffMachineType::I386);
 
-	const u16 MACHINE_I386 = 0x14C;
-	
-	// Only interested in x86 object files
-	assert(machine == MACHINE_I386);
-
-	m_machine          = machine;
-	m_num_sections     = num_sections;
-	m_datetime_created = time_date;
-	m_symbol_table_ptr = symbol_table_ptr;
-	m_num_symbols      = num_symbols;
-	m_characteristics  = characteristics;
-
-	struct SectionHeader {
+	struct SectionHeader
+	{
 		u8 Name[8];
 		u8 _[32];
 	};
-	static_assert(sizeof(SectionHeader) == 40, "SectionHeader must be 40 bytes in size.");
+
+	static_assert (
+		sizeof(SectionHeader) == 40,
+		"SectionHeader must be 40 bytes in size."
+	);
 
 	for(u16 i = 0; i < num_sections; ++i)
 	{
