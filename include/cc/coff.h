@@ -10,11 +10,11 @@ namespace cc
 	{
 	private:
 		ECoffMachineType m_machine;
-		u16 m_num_sections;
-		u32 m_datetime_created;
-		u32 m_symbol_table_ptr;
-		u32 m_num_symbols;
-		u16 m_characteristics;
+		u16              m_num_sections;
+		u32              m_datetime_created;
+		u32              m_symbol_table_ptr;
+		u32              m_num_symbols;
+		u16              m_characteristics;
 
 	public:
 		void ReadFromFile(const char* filepath);
