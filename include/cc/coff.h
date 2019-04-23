@@ -7,9 +7,11 @@ namespace cc
 	class CoffObjectFile
 	{
 	private:
-		u16	m_machine, m_num_sections;
+		u16 m_machine;
+		u16 m_num_sections;
 		u32 m_datetime_created;
-		u32 m_symbol_table_ptr, m_num_symbols;
+		u32 m_symbol_table_ptr;
+		u32 m_num_symbols;
 		u16 m_characteristics;
 
 	public:
