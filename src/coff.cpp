@@ -36,6 +36,8 @@ void CoffObjectFile::ReadFromFile(const char* filepath)
 	assert(num_sections <= 96);
 	assert(m_machine == ECoffMachineType::I386);
 
+	// ---------------------------------------------------
+
 	struct SectionHeader
 	{
 		u8 Name[8];
