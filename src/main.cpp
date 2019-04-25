@@ -30,7 +30,15 @@ int main(int argc, char* argv[])
 	
 	cc::CoffObjectFile object_file;
 	object_file.ReadFromFile(input_file.c_str());
-	object_file.WriteToFile("data/TEST_OUTPUT.txt");
+
+	auto sections = object_file.Sections();
+
+	for(auto section : sections)
+	{
+		auto name = section.Name();
+		CINFO("Read Sectio Name: {0}", section.Name().ResolveString());
+	}
+
 	cc::TryKeepConsoleOpen();
 	return 0;
 }

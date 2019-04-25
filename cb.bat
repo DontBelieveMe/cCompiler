@@ -26,11 +26,13 @@ if "%1"=="build" (
 	echo ================
 	echo.
 
-	call tools\msbuild .
+	call tools\msbuild cCompiler.sln
 )
 
 if "%1"=="test" (
-	call tests\build\bin\Debug\cCompiler-tests.exe
+	cd tests
+	call build\bin\Debug\cCompiler-tests.exe
+	cd ..
 )
 
 if "%1"=="devenv" (
@@ -55,10 +57,16 @@ if "%1"=="clean" (
 	if exist "cCompiler.vcxproj.filters" del cCompiler.vcxproj.filters
 	if exist "cCompiler.vcxproj.user" del cCompiler.vcxproj.user
 
+	if exist "cCompiler-as.sln" del cCompiler-as.sln
+	if exist "cCompiler-as.vcxproj" del cCompiler-as.vcxproj
+	if exist "cCompiler-as.vcxproj.filters" del cCompiler-as.vcxproj.filters
+	if exist "cCompiler-as.vcxproj.user" del cCompiler-as.vcxproj.user
+
 	if exist "tests\cCompiler-tests.vcxproj" del tests\cCompiler-tests.vcxproj
 	if exist "tests\cCompiler-tests.vcxproj.filters" del tests\cCompiler-tests.vcxproj.filters
 	if exist "tests\cCompiler-tests.vcxproj.user" del tests\cCompiler-tests.vcxproj.user
 
-	if exist ".vs" rd .vs /s /q	
+	if exist ".vs" rd .vs /s /q
+
 	echo All Done!
 )

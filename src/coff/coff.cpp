@@ -38,21 +38,12 @@ void CoffObjectFile::ReadFromFile(const char* filepath)
 
 	// ---------------------------------------------------
 
-	struct SectionHeader
-	{
-		u8 Name[8];
-		u8 _[32];
-	};
-
-	static_assert (
-		sizeof(SectionHeader) == 40,
-		"SectionHeader must be 40 bytes in size."
-	);
-
 	for(u16 i = 0; i < num_sections; ++i)
 	{
-		SectionHeader header = data_buffer.ReadNext<SectionHeader>();
-		std::printf("Section Header Name: %s\n", header.Name);
+		SectionHeader section;
+		section.ReadFromMemory(data_buffer);
+
+		m_sections.push_back(section);
 	}
 }
 

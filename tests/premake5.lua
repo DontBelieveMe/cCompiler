@@ -10,8 +10,11 @@ project "cCompiler-tests"
 	includedirs {
 		"../vendor/spdlog/include",
 		"../vendor/cxxopts",
-		"../vendor/catch2"
+		"../vendor/catch2",
+		"../include"
 	}
+
+	links { "cCompiler" }
 
 	filter "configurations:Debug"
 		defines { "DEBUG" }

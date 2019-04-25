@@ -84,7 +84,7 @@ namespace cc
 
 			const T value = *(reinterpret_cast<T*>(m_ptr));
 
-			return value;
+return value;
 		}
 
 		bool SequenceEqualsString(const char* str);

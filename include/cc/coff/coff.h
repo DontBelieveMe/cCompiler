@@ -3,6 +3,10 @@
 #include "../int_types.h"
 #include "../datetime.h"
 
+#include "sections.h"
+
+#include <vector>
+
 namespace cc
 {
 	enum class ECoffMachineType : u16;
@@ -17,6 +21,8 @@ namespace cc
 		u32              m_num_symbols;
 		u16              m_characteristics;
 
+		std::vector<SectionHeader> m_sections;
+
 	public:
 		void Machine(ECoffMachineType machine) { m_machine = machine; }
 		ECoffMachineType Machine() const { return m_machine; }
@@ -26,6 +32,9 @@ namespace cc
 
 		void ReadFromFile(const char* filepath);
 		void WriteToFile(const char* filepath);
+
+		const std::vector<SectionHeader>& Sections() const
+			{ return m_sections; }
 	};
 
 	enum class ECoffMachineType : u16
