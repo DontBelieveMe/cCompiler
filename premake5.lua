@@ -9,6 +9,10 @@ project "cCompiler"
 
 	targetdir "build/bin/%{cfg.buildcfg}"
 	objdir "build/obj/%{cfg.buildcfg}"
+	
+	os.execute("python tools/x86-gen.py")
+	os.copyfile("tools/x86.cpp", "src/x86.cpp")
+	os.copyfile("tools/x86.h", "include/cc/x86.h")
 
 	files { "include/**.h", "src/**.cpp" }
 	removefiles { "src/main.cpp" }

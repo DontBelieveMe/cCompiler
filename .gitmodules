@@ -1,0 +1,3 @@
+[submodule "vendor/opcodes"]
+	path = vendor/opcodes
+	url = https://github.com/Maratyszcza/Opcodes.git

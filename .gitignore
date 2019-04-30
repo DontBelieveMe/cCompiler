@@ -5,3 +5,8 @@ build/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+tools/x86.cpp
+tools/x86.h
+src/x86.cpp
+include/cc/x86.h
