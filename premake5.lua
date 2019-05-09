@@ -9,13 +9,18 @@ project "cCompiler"
 
 	targetdir "build/bin/%{cfg.buildcfg}"
 	objdir "build/obj/%{cfg.buildcfg}"
-	
+
+	print("Generating source files...")
 	os.execute("python tools/x86-gen.py")
-	os.copyfile("tools/x86.cpp", "src/x86.cpp")
-	os.copyfile("tools/x86.h", "include/cc/x86.h")
+
+	print("Copying generated files to source tree...")
+	os.copyfile("tools/x86_data.cpp", "src/x86_data.cpp")
+	os.copyfile("tools/x86_data.h", "include/cc/x86_data.h")
 
 	files { "include/**.h", "src/**.cpp" }
-	removefiles { "src/main.cpp" }
+	removefiles {
+		"src/main.cpp"
+	}
 	
 	includedirs { 
 		"include",

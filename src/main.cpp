@@ -7,6 +7,8 @@
 
 #include <cxxopts/cxxopts.hpp>
 
+#include <cc/x86_data.h>
+
 int main(int argc, char* argv[])
 {
 	cc::Logger::Startup();

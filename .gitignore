@@ -6,7 +6,7 @@ build/
 *.vcxproj.filters
 *.vcxproj.user
 
-tools/x86.cpp
-tools/x86.h
-src/x86.cpp
-include/cc/x86.h
+tools/x86_data.cpp
+tools/x86_data.h
+src/x86_data.cpp
+include/cc/x86_data.h
