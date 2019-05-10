@@ -77,6 +77,9 @@ h_file += '''
             : m_opcodes(opcodes), m_num_opcodes(num_opcodes)
         {
         }
+
+        const std::array<u8, 4>& OpcodeBytes() const { return m_opcodes; }
+        u8 NumOpcodeBytes() const { return m_num_opcodes; }
     };
 
     class X86Instruction

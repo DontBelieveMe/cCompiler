@@ -12,7 +12,12 @@
 int main(int argc, char* argv[])
 {
 	cc::Logger::Startup();
-	
+
+	using namespace cc;
+
+	X86Instruction* inst = X86InstructionSet::GetInstructionFromName("mov");
+	CINFO("mov has {0} forms", inst->Forms().size());
+
 	cxxopts::Options options("cCompiler", "Assembler for x86");
 	options.add_options()
 		("s,source", "Input Source File (.asm)", cxxopts::value<std::string>())
