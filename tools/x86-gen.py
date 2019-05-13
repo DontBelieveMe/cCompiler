@@ -59,26 +59,52 @@ registers = [
     'esp'
 ]
 
+operand_types = [
+    'xmm0', 'rel8', 'rel32', 'imm4', 'imm8', 'imm16', 'imm32',
+    'r8', 'r16', 'r32', 'mm', 'xmm', 'ymm', 'zmm', 'm', 'm8', 'm16',
+    'm32', 'm64', 'm80', 'm128', 'm256', 'eax', 'al', 'ax', 'cl', 'r64',
+    'constant1', 'constant3', 'k', 'moffs32', 'xmm_k_', 'xmm_k__z_', 'ymm_k_',
+    'ymm_k__z_', 'zmm_k_', 'zmm_k__z_', 'k_k_', '_er_', 'm512', 'm128_m64bcst',
+    'm256_m64bcst', 'm512_m64bcst', 'm128_m32bcst', 'm256_m32bcst', 'm512_m32bcst',
+    '_sae_', 'm128_k__z_', 'm256_k__z_', 'm512_k__z_', 'm64_m32bcst', 'm64_k__z_',
+    'vm32y_k_', 'vm32z_k_', 'vm64z_k_', 'vm64y', 'vm32y', 'vm32x',
+    'vm64x', 'vm32z', 'm64_k_', 'vm64z', 'm32_k__z_', 'm16_k__z_', 'vm32x_k_',
+    'vm64x_k_', 'vm64y_k_', 'm32_k_',
+]
+
 h_file += '\n\tenum class EX86Registers {\n'
 
 for register in registers:
     h_file += '\t\t' + register.capitalize() + ',\n'
 
 h_file += '\t};\n' # Close brace for EX86Registers enum
+
+h_file += '\n\tenum class EX86Operand {\n'
+for operand in operand_types:
+    h_file += '\t\t' + operand.capitalize() + ',\n'
+h_file += '\t};\n'
+
 h_file += '''
     class X86InstructionForm
     {
     private:
-        std::array<u8, 4> m_opcodes;
+        static const std::size_t MaxNumOperands = 5;
+        static const std::size_t MaxNumOpcodeBytes = 5;
+
+        std::array<u8, MaxNumOpcodeBytes> m_opcodes;
         u8 m_num_opcodes;
 
+        std::array<EX86Operand, MaxNumOperands> m_operands;
+        u8 m_num_operands;
+
     public:
-        X86InstructionForm(std::array<u8, 4> opcodes, u8 num_opcodes)
-            : m_opcodes(opcodes), m_num_opcodes(num_opcodes)
+        X86InstructionForm(std::array<u8, MaxNumOpcodeBytes> opcodes, u8 num_opcodes,
+                            std::array<EX86Operand, MaxNumOperands> operands, u8 num_operands)
+            : m_opcodes(opcodes), m_num_opcodes(num_opcodes), m_operands(operands), m_num_operands(num_operands)
         {
         }
 
-        const std::array<u8, 4>& OpcodeBytes() const { return m_opcodes; }
+        const std::array<u8, MaxNumOpcodeBytes>& OpcodeBytes() const { return m_opcodes; }
         u8 NumOpcodeBytes() const { return m_num_opcodes; }
     };
 
@@ -125,6 +151,11 @@ for instruction in isa:
     cpp_file += '\t\t"' + inst_name + '", ' + enum_ident + ',\n\t\t{\n'
 
     for form in instruction.forms:
+        operands = form.operands
+
+        if len(operands) > 4:
+            print(inst_name + " has too many operands! | " + str(len(operands)))
+
         for encoding in form.encodings:
             opcodes = []
 
@@ -133,18 +164,30 @@ for instruction in isa:
                     opcodes.append(component.byte)
 
                 if type(component) is x86.Prefix:
-                    if component.is_mandatory:
-                        opcodes.append(component.byte)
+                    opcodes.append(component.byte)
 
             if len(opcodes) > 0:
-                assert(len(opcodes) <= 4) # Limit imposed by code generator
-
                 cpp_file += '\t\t\tX86InstructionForm({'
 
                 for op in opcodes:
                     cpp_file += hex(op) + ','
 
-                cpp_file += '}, ' + str(len(opcodes)) + '),\n'
+                cpp_file += '}, ' + str(len(opcodes))
+                cpp_file += ',\n\t\t\t\t'
+
+                cpp_file += '{'
+
+                for op in operands:
+                    t = op.type.replace('{', '_').replace('}', '_').replace('/', '_')
+
+                    if op.type == '1' or op.type == '3':
+                        cpp_file += 'EX86Operand::Constant' + op.type + ','
+                    else:
+                        cpp_file += 'EX86Operand::' + t.capitalize() + ','
+
+                cpp_file += '},' + str(len(operands))
+
+                cpp_file += '\n\t\t\t),\n'
 
     cpp_file += '\t\t}\n\t},\n'
 
