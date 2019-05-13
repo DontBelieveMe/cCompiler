@@ -8,6 +8,7 @@
 #include <cxxopts/cxxopts.hpp>
 
 #include <cc/x86_data.h>
+#include <cc/x86_encoder.h>
 
 int main(int argc, char* argv[])
 {
@@ -16,7 +17,9 @@ int main(int argc, char* argv[])
 	using namespace cc;
 
 	X86Instruction* inst = X86InstructionSet::GetInstructionFromName("mov");
-	CINFO("mov has {0} forms", inst->Forms().size());
+	
+	X86Encoder encoder;
+	encoder.Encode(instructionForm, { }, 2);
 
 	cxxopts::Options options("cCompiler", "Assembler for x86");
 	options.add_options()

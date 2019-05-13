@@ -49,16 +49,6 @@ for instruction in isa:
 
 h_file += '\t};\n' # Close brace for EX86Instruction enum
 
-registers = [
-    'eax',
-    'ebx',
-    'ecx',
-    'edx',
-    'esi',
-    'edi',
-    'esp'
-]
-
 operand_types = [
     'xmm0', 'rel8', 'rel32', 'imm4', 'imm8', 'imm16', 'imm32',
     'r8', 'r16', 'r32', 'mm', 'xmm', 'ymm', 'zmm', 'm', 'm8', 'm16',
@@ -72,19 +62,35 @@ operand_types = [
     'vm64x_k_', 'vm64y_k_', 'm32_k_',
 ]
 
-h_file += '\n\tenum class EX86Registers {\n'
-
-for register in registers:
-    h_file += '\t\t' + register.capitalize() + ',\n'
-
-h_file += '\t};\n' # Close brace for EX86Registers enum
-
 h_file += '\n\tenum class EX86Operand {\n'
 for operand in operand_types:
     h_file += '\t\t' + operand.capitalize() + ',\n'
 h_file += '\t};\n'
 
 h_file += '''
+    class X86Register
+    {
+    private:
+        const char* m_name;
+        u8 m_value;
+
+    public:
+        X86Register(const char* name, u8 v): m_name(name), m_value(v) {}
+
+        static const X86Register Eax;
+        static const X86Register Ecx;
+        static const X86Register Edx;
+        static const X86Register Ebx;
+        static const X86Register Esp;
+        static const X86Register Ebp;
+        static const X86Register Esi;
+        static const X86Register Edi;
+
+    public:
+        u8 Value() const { return m_value; }
+        const char* Name() const { return m_name; }
+    };
+
     class X86InstructionForm
     {
     private:
@@ -128,6 +134,7 @@ h_file += '''
     {
     public:
         static constexpr int NumberOfInstructions = ''' + str(unique_instruction_number) + ''';
+
     private:
         static X86Instruction s_instructions[NumberOfInstructions];
 
@@ -141,6 +148,15 @@ h_file += '}\n' # Close brace for cc namespace
 cpp_file = '''#include <cc/x86_data.h>
 using namespace cc;
 
+const X86Register X86Register::Eax("eax", 0x00);
+const X86Register X86Register::Ecx("ecx", 0x01);
+const X86Register X86Register::Edx("edx", 0x02);
+const X86Register X86Register::Ebx("ebx", 0x03);
+const X86Register X86Register::Esp("esp", 0x04);
+const X86Register X86Register::Ebp("ebp", 0x05);
+const X86Register X86Register::Esi("esi", 0x06);
+const X86Register X86Register::Edi("edi", 0x07);
+
 X86Instruction X86InstructionSet::s_instructions[] = {
 '''
 for instruction in isa:
@@ -153,18 +169,18 @@ for instruction in isa:
     for form in instruction.forms:
         operands = form.operands
 
-        if len(operands) > 4:
-            print(inst_name + " has too many operands! | " + str(len(operands)))
-
         for encoding in form.encodings:
             opcodes = []
-
+            ims = 0
             for component in encoding.components:
                 if type(component) is x86.Opcode:
                     opcodes.append(component.byte)
 
                 if type(component) is x86.Prefix:
                     opcodes.append(component.byte)
+
+                if type(component) is x86.Immediate:
+                    ims += 1
 
             if len(opcodes) > 0:
                 cpp_file += '\t\t\tX86InstructionForm({'
