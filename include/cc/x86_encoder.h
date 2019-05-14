@@ -5,7 +5,7 @@
 namespace cc {
 	class X86Encoder {
 	public:
-		void Encode(X86InstructionForm* form, /* Need a way of passing operands */ );
+		void Encode(X86InstructionForm* form /* Need a way of passing operands */ );
 
 	private:
 	};

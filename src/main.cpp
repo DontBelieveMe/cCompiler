@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	X86Instruction* inst = X86InstructionSet::GetInstructionFromName("mov");
 	
 	X86Encoder encoder;
-	encoder.Encode(instructionForm, { }, 2);
+	//encoder.Encode(&(inst->Forms()[0]), { X86Register::Eax, 2100 }, 2);
 
 	cxxopts::Options options("cCompiler", "Assembler for x86");
 	options.add_options()

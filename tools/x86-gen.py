@@ -128,6 +128,7 @@ h_file += '''
 
         const char* Name() const { return m_name; }
         const std::vector<X86InstructionForm> Forms() const { return m_forms; }
+        EX86Instruction InstructionEnum() const { return m_ins; }
     };
 
     class X86InstructionSet
@@ -176,11 +177,14 @@ for instruction in isa:
                 if type(component) is x86.Opcode:
                     opcodes.append(component.byte)
 
+                    if component.addend != None:
+                        ims += 1
+
                 if type(component) is x86.Prefix:
                     opcodes.append(component.byte)
 
-                if type(component) is x86.Immediate:
-                    ims += 1
+            if ims == 1:
+                print(inst_name + " has " + str(ims) + " addend")
 
             if len(opcodes) > 0:
                 cpp_file += '\t\t\tX86InstructionForm({'
