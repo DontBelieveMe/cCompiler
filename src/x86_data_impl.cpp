@@ -10,60 +10,44 @@
 
 using namespace cc;
 
-static int StringCompareIgnoreCase(const char* a, const char* b) {
-  assert(a != nullptr);
-  assert(b != nullptr);
-
-  if (a[0] == 0) return -1;
-
-  if (b[0] == 0) return 1;
-
-  const std::size_t len = std::strlen(a);
-  for (std::size_t i = 0; i < len; ++i) {
-    unsigned char ca = static_cast<unsigned char>(a[i]);
-    unsigned char cb = static_cast<unsigned char>(b[i]);
-
-	if (ca >= 'A' && ca <= 'Z') ca |= 0x20; //std::tolower(ca);
-
-	if (cb >= 'A' && cb <= 'Z') cb |= 0x20;  std::tolower(cb);
-
-	if (ca != cb) return ca - cb; // ca < cb ? -1 : 1;
-  }
-
-  return 0;
-}
-
-/*
-/// Mimics the behavior of strcmp however treats every character as
-/// a lowercase version of itself.
-/// e.g StringCompareIgnoreCase("aBcD", "ddCC") == StringCompareIgnoreCase("abcd", "ddcc")
 static int StringCompareIgnoreCase(const char* a, const char* b)
 {
+	// C Standard Library defines this as UB so just assert it's OK.
 	assert(a != nullptr);
 	assert(b != nullptr);
 
-	const std::size_t a_len = std::strlen(a);
-	const std::size_t b_len = std::strlen(b);
-	
-	// note (bdw): This is just mimicking what GCC does when passing
-	//             empty strings to strlen.
-	if (a_len == 0)
+	// This is mimicking GCC's behaviour for when one input is empty.
+	// Not sure if this is allowed to be UB or not. If it can be
+	// then we may just be able to assert this instead.
+	if (a[0] == 0)
 		return -1;
 
-	if (b_len == 0)
+	if (b[0] == 0)
 		return 1;
 
-	for(std::size_t i = 0; i < a_len; ++i)
+	const std::size_t len = std::strlen(a);
+	for (std::size_t i = 0; i < len; ++i)
 	{
-		const unsigned char ca = std::tolower(static_cast<unsigned char>(a[i]));
-		const unsigned char cb = std::tolower(static_cast<unsigned char>(b[i]));
+		unsigned char ca = static_cast<unsigned char>(a[i]);
+		unsigned char cb = static_cast<unsigned char>(b[i]);
+
+		// Normalise to lowercase if the character is an uppercase ASCII
+		// digit.
+		// A lot faster than just a `std::tolower` call (yes I've profiled it)
+		// This trick brings this function up to roughly the same speed as a normal
+		// `std:strcmp`
+		if (ca >= 'A' && ca <= 'Z')
+			ca |= 0x20;
+
+		if (cb >= 'A' && cb <= 'Z')
+			cb |= 0x20;
 
 		if (ca != cb)
 			return ca < cb ? -1 : 1;
 	}
 
 	return 0;
-}*/
+}
 
 X86Instruction* X86InstructionSet::GetInstructionFromName(const char* name)
 {

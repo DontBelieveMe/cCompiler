@@ -7,6 +7,11 @@ project "cCompiler-tests"
 
 	files { "**.cpp" }
 
+	-- This is not an actual perf test, just a dump of a QuickBench session
+	removefiles {
+		"perf_stringcompareignorecase.cpp"
+	}
+
 	includedirs {
 		"../vendor/spdlog/include",
 		"../vendor/cxxopts",

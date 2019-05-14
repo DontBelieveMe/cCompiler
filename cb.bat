@@ -26,7 +26,7 @@ if "%1"=="build" (
 	echo ================
 	echo.
 
-	call tools\msbuild cCompiler.sln
+	call tools\msbuild cCompiler.sln -verbosity:minimal
 )
 
 if "%1"=="test" (
