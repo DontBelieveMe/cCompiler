@@ -1,6 +1,8 @@
 # cCompiler
 An assembler for x86.
 
+Note: For any questions or anything of the like feel free to create either an Issue or email me at the address listed on my profile.
+
 ## Requirements
  - Will require python (version 3) installed globally
  - premake5 (not required for Windows - for Windows premake5 is bundled with the repo)
