@@ -51,6 +51,10 @@ static int StringCompareIgnoreCase(const char* a, const char* b)
 
 X86Instruction* X86InstructionSet::GetInstructionFromName(const char* name)
 {
+	// This performs a binary search on all the instructions in the ISA, trying to find
+	// one that has a matching mnemonic. The s_instructions list is guaranteed to be
+	// sorted so we can do a binary search.
+
 	int min = 0;
 	int max = NumberOfInstructions - 1;
 	int middle = (max + min) / 2;
