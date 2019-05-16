@@ -172,19 +172,13 @@ for instruction in isa:
 
         for encoding in form.encodings:
             opcodes = []
-            ims = 0
+
             for component in encoding.components:
                 if type(component) is x86.Opcode:
                     opcodes.append(component.byte)
 
-                    if component.addend != None:
-                        ims += 1
-
                 if type(component) is x86.Prefix:
                     opcodes.append(component.byte)
-
-            if ims == 1:
-                print(inst_name + " has " + str(ims) + " addend")
 
             if len(opcodes) > 0:
                 cpp_file += '\t\t\tX86InstructionForm({'

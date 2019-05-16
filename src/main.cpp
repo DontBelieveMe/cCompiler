@@ -14,13 +14,6 @@ int main(int argc, char* argv[])
 {
 	cc::Logger::Startup();
 
-	using namespace cc;
-
-	X86Instruction* inst = X86InstructionSet::GetInstructionFromName("mov");
-	
-	X86Encoder encoder;
-	//encoder.Encode(&(inst->Forms()[0]), { X86Register::Eax, 2100 }, 2);
-
 	cxxopts::Options options("cCompiler", "Assembler for x86");
 	options.add_options()
 		("s,source", "Input Source File (.asm)", cxxopts::value<std::string>())
