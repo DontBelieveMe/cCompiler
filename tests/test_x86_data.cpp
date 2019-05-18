@@ -36,3 +36,31 @@ TEST_CASE("X86InstructionSet GetInstructionFromName() return's null pointer for 
 
 	REQUIRE(inst == nullptr);
 }
+
+TEST_CASE("Can resolve valid instructions operands to form", "[X86Instruction]")
+{
+	using namespace cc;
+
+	SECTION("Resolves mov r32/imm32 operand pair")
+	{
+		X86Instruction* mov_inst = X86InstructionSet::GetInstructionFromName("mov");
+
+		X86InstructionForm* form = mov_inst->ResolveForm({EX86Operand::R32, EX86Operand::Imm32});
+
+		auto operands = form->Operands();
+
+		REQUIRE(operands[0] == EX86Operand::R32);
+		REQUIRE(operands[1] == EX86Operand::Imm32);
+		REQUIRE(form->OpcodeBytes()[0] == 0xB8);
+	}
+}
+
+TEST_CASE("Resolves a instruction that doesn't have the given operands to nullptr", "[X86Instruction]")
+{
+	using namespace cc;
+
+	X86Instruction* bswap = X86InstructionSet::GetInstructionFromName("bswap");
+
+	X86InstructionForm* form = bswap->ResolveForm({EX86Operand::Imm32, EX86Operand::Imm32});
+	REQUIRE(form == nullptr);
+}

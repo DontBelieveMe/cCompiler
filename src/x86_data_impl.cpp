@@ -86,3 +86,29 @@ X86Instruction* X86InstructionSet::GetInstructionFromName(const char* name)
 
 	return instruction_ptr;
 }
+
+X86InstructionForm* X86Instruction::ResolveForm(const std::vector<EX86Operand>& operand_types)
+{
+	// Do simple linear search on all forms of an instruction in order to find the one that
+	// matches the given operands.
+
+	for(std::size_t j = 0; j < m_forms.size(); ++j)
+	{
+		X86InstructionForm* form = &m_forms[j];
+
+		if(form->NumOperands() == static_cast<u8>(operand_types.size()))
+		{
+			const std::array<EX86Operand, 5>& operands = form->Operands();
+
+			for(u8 i = 0; i < form->NumOperands(); ++i)
+			{
+				if(operands[i] == operand_types[i])
+				{
+					return form;
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}

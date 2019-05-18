@@ -11,6 +11,10 @@ if "%1"=="premake" (
 	call tools\premake5 %PremakeTarget%
 )
 
+if "%1" == "cg" (
+	python tools\x86-gen.py
+)
+
 if "%1"=="build" (
 	if not exist "cCompiler.sln" (
 		echo =========================================
@@ -26,7 +30,11 @@ if "%1"=="build" (
 	echo ================
 	echo.
 
-	call tools\msbuild cCompiler.sln -verbosity:minimal
+	if NOT "%2" == "tests" (
+		call tools\msbuild cCompiler.sln -verbosity:minimal
+	) else (
+		call tools\msbuild tests\cCompiler-tests.vcxproj -verbosity:minimal
+	)
 )
 
 if "%1"=="test" (

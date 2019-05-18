@@ -3,6 +3,12 @@
 
 using namespace cc;
 
+ReadBuffer::ReadBuffer(const WriteBuffer& write_buffer)
+	: m_ptr(write_buffer.Data()),  m_start(write_buffer.Data()),
+	  m_count(write_buffer.Size())
+{
+}
+
 ReadBuffer::ReadBuffer(u8* buffer, std::size_t count)
 	: m_ptr(buffer), m_start(buffer), m_count(count)
 {

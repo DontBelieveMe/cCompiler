@@ -27,7 +27,7 @@ namespace cc
 		template <typename T>
 		void WriteNext(T value)
 		{
-			if(m_capacity >= m_size)
+			if(m_size >= m_capacity)
 			{
 				if(m_capacity == 0)
 					m_capacity = 16;
@@ -44,7 +44,7 @@ namespace cc
 				}
 			}
 
-			*(reinterpret_cast<T*>(m_buffer) + m_size) = value;
+			*(reinterpret_cast<T*>(m_buffer + m_size)) = value;
 			m_size += sizeof(T);
 		}
 	};
@@ -58,6 +58,7 @@ namespace cc
 		std::size_t m_count;
 	public:
 		ReadBuffer(u8* buffer, std::size_t count);
+		ReadBuffer(const WriteBuffer& write_buffer);
 		ReadBuffer();
 
 		void Clear();

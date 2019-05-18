@@ -96,3 +96,20 @@ TEST_CASE("ReadBuffer PeekNext() can read data without advancing", "[ReadBuffer]
 		REQUIRE(read_buff.ReadNext<cc::u16>() == 0x0E0D);
 	}
 }
+
+TEST_CASE("Can create ReadBuffer from valid WriteBuffer", "[ReadBuffer]")
+{
+	SECTION("Can read same bytes written to the buffer back out again")
+	{
+		cc::WriteBuffer write_buff(3);
+		write_buff.WriteNext<cc::u8>(0xAB);
+		write_buff.WriteNext<cc::u8>(0x12);
+		write_buff.WriteNext<cc::u8>(0x8D);
+
+		cc::ReadBuffer read_buff(write_buff);
+
+		REQUIRE(read_buff.ReadNext<cc::u8>() == 0xAB);
+		REQUIRE(read_buff.ReadNext<cc::u8>() == 0x12);
+		REQUIRE(read_buff.ReadNext<cc::u8>() == 0x8D);
+	}
+}

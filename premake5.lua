@@ -17,7 +17,7 @@ project "cCompiler"
 	os.copyfile("tools/x86_data.cpp", "src/x86_data.cpp")
 	os.copyfile("tools/x86_data.h", "include/cc/x86_data.h")
 
-	files { "include/**.h", "src/**.cpp" }
+	files { "include/**.h", "src/**.cpp", "tools/*.py" }
 	removefiles {
 		"src/main.cpp"
 	}
