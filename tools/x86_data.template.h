@@ -39,7 +39,7 @@ $)
 	{
 	private:
 		const char* m_name;
-		u8			m_value;
+		u8          m_value;
 
 	public:
 		X86Register(const char* name, u8 v): m_name(name), m_value(v) {}
@@ -68,20 +68,20 @@ $)
 	class X86InstructionForm
 	{
 	private:
-		static const std::size_t				MaxNumOperands = 5;
-		static const std::size_t				MaxNumOpcodeBytes = 5;
+		static const std::size_t                MaxNumOperands = 5;
+		static const std::size_t                MaxNumOpcodeBytes = 5;
 
-		std::array<u8, MaxNumOpcodeBytes>		m_opcodes;
-		u8										m_num_opcodes;
+		std::array<u8, MaxNumOpcodeBytes>       m_opcodes;
+		u8                                      m_num_opcodes;
 
 		std::array<EX86Operand, MaxNumOperands> m_operands;
-		u8										m_num_operands;
+		u8                                      m_num_operands;
 
 	public:
 		X86InstructionForm(std::array<u8, MaxNumOpcodeBytes> opcodes,
-						   u8 num_opcodes,
-						   std::array<EX86Operand, MaxNumOperands> operands,
-						   u8 num_operands)
+		                   u8 num_opcodes,
+		                   std::array<EX86Operand, MaxNumOperands> operands,
+		                   u8 num_operands)
 			: m_opcodes(opcodes),
 			  m_num_opcodes(num_opcodes),
 			  m_operands(operands),
@@ -118,8 +118,8 @@ $)
 	class X86Instruction
 	{
 	private:
-		const char*						m_name;
-		EX86Instruction					m_ins;
+		const char*	                    m_name;
+		EX86Instruction                 m_ins;
 		std::vector<X86InstructionForm> m_forms;
 
 	public:
