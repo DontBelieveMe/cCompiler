@@ -118,7 +118,7 @@ $)
 	class X86Instruction
 	{
 	private:
-		const char*	                    m_name;
+		const char*                     m_name;
 		EX86Instruction                 m_ins;
 		std::vector<X86InstructionForm> m_forms;
 
