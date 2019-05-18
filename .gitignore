@@ -5,6 +5,7 @@ build/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+*.pyc
 
 tools/x86_data.cpp
 tools/x86_data.h
