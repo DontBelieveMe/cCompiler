@@ -2,6 +2,79 @@
 
 #include <cc/buffer.h>
 
+TEST_CASE("ReadBuffer Advance() can move n bytes into the stream", "[ReadBuffer]")
+{
+	cc::u8 data[] = { 0xA, 0xB, 0x1, 0x2, 0x3, 0x5, 0x10 };
+
+	SECTION("Advances when given size is reasonable")
+	{
+		cc::ReadBuffer buff(data, sizeof(data));
+
+		buff.Advance(3);
+
+		REQUIRE(buff.PeekNext<cc::u8>() == 0x2);
+	}
+
+	SECTION("Does not do anything when given size is 0")
+	{
+		cc::ReadBuffer buff(data, sizeof(data));
+
+		buff.Advance(0);
+
+		REQUIRE(buff.PeekNext <cc::u8>() == 0x0A);
+	}
+
+	SECTION("Does not do anything when given size would overflow the buffer")
+	{
+		cc::ReadBuffer buff(data, sizeof(data));
+
+		buff.Advance(-1231);
+
+		REQUIRE(buff.PeekNext<cc::u8>() == 0xA);
+	}
+}
+
+TEST_CASE("ReadBuffer ResetToStart() will reset the read pointer to the start of the data stream", "[ReadBuffer]")
+{
+	cc::u8 data[] = { 0xA, 0xB, 0xC, 0xD, 0xE };
+
+	cc::ReadBuffer buff(data, sizeof(data));
+
+	buff.ReadNext<cc::u8>(); buff.ReadNext<cc::u8>();
+
+	buff.ResetToStart();
+
+	REQUIRE(buff.PeekNext<cc::u8>() == 0xA);
+}
+
+TEST_CASE("ReadBuffer SequenceEqualsString() can read following data and compare against a string", "[ReadBuffer]")
+{
+	cc::u8 data[] = { 'h', 'e', 'l', 'l', 'o' };
+
+	cc::ReadBuffer buff(data, sizeof(data));
+
+	REQUIRE(buff.SequenceEqualsString("hello"));
+}
+
+TEST_CASE("ReadBuffer SequenceEqualsString() handles invalid string arguments cleanly", "[ReadBuffer]")
+{
+	cc::u8 data[] = { 'h', 'e', 'l', 'l', 'o' };
+
+	SECTION("Returns false when argument string is nullptr")
+	{
+		cc::ReadBuffer buff(data, sizeof(data));
+
+		REQUIRE(buff.SequenceEqualsString(nullptr) == false);
+	}
+
+	SECTION("Returns false when argument string is empty")
+	{
+		cc::ReadBuffer buff(data, sizeof(data));
+
+		REQUIRE(buff.SequenceEqualsString("") == false);
+	}
+}
+
 TEST_CASE("ReadBuffer ReadNext() will read consequtive data from stream", "[ReadBuffer]")
 {
 	cc::u8 data[] = {
@@ -113,3 +186,4 @@ TEST_CASE("Can create ReadBuffer from valid WriteBuffer", "[ReadBuffer]")
 		REQUIRE(read_buff.ReadNext<cc::u8>() == 0x8D);
 	}
 }
+

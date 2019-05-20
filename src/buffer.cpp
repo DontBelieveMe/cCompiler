@@ -42,6 +42,9 @@ void ReadBuffer::ResetToStart()
 
 bool ReadBuffer::SequenceEqualsString(const char* str)
 {
+	if (!str || str[0] == '\0')
+		return false;
+
 	const std::size_t string_len = std::strlen(str);
 
 	assert((m_ptr + string_len) - m_start <= static_cast<std::ptrdiff_t>(m_count));
@@ -53,7 +56,9 @@ bool ReadBuffer::SequenceEqualsString(const char* str)
 void ReadBuffer::Advance(std::size_t advance_by)
 {
 	assert((m_ptr + advance_by) - m_start <= static_cast<std::ptrdiff_t>(m_count));
-	m_ptr += advance_by;
+
+	if(advance_by > 0 && m_ptr + advance_by < m_ptr + m_count)
+		m_ptr += advance_by;
 }
 
 WriteBuffer::WriteBuffer(std::size_t initial_capacity)
