@@ -73,16 +73,24 @@ $)
 		std::array<EX86Operand, MaxNumOperands> m_operands;
 		u8                                      m_num_operands;
 
+		u8                                      m_instruction_size;
+
 	public:
 		X86InstructionForm(std::array<u8, MaxNumOpcodeBytes> opcodes,
 		                   u8 num_opcodes,
 		                   std::array<EX86Operand, MaxNumOperands> operands,
-		                   u8 num_operands)
+		                   u8 num_operands, u8 instruction_size)
 			: m_opcodes(opcodes),
 			  m_num_opcodes(num_opcodes),
 			  m_operands(operands),
-			  m_num_operands(num_operands)
+			  m_num_operands(num_operands),
+			  m_instruction_size(instruction_size)
 		{
+		}
+
+		u8 InstructionSize() const
+		{
+			return m_instruction_size;
 		}
 
 		const std::array<u8, MaxNumOpcodeBytes>& OpcodeBytes() const

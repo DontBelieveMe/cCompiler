@@ -28,12 +28,28 @@ for instruction in isa:
 		for encoding in form.encodings:
 			opcodes = []
 
+			instruction_size = 0
 			for component in encoding.components:
 				if type(component) is x86.Opcode:
 					opcodes.append(component.byte)
+					instruction_size += 1
+
 				if type(component) is x86.Prefix:
 					opcodes.append(component.byte)
+					instruction_size += 1
 
+				if type(component) is x86.ModRM:
+					instruction_size += 1
+
+				if type(component) is x86.Immediate:
+					instruction_size += component.size
+
+				# TODO: Support other components that affect instruction size
+				#       e.g. SIB byte, Register Byte, CodeOffset Displacment etc...
+
+			assert(instruction_size <= 15)
+
+			# todo (bwilks) check why i've put an if statement here
 			if len(opcodes) > 0:
 				indent(3)
 				emit("X86InstructionForm({")
@@ -58,7 +74,7 @@ for instruction in isa:
 					else:
 						emit("EX86Operand::{0},".format(t.capitalize()))
 
-				emit("}}, {0}".format(str(len(operands))))
+				emit("}}, {0}, {1}".format(str(len(operands)), instruction_size))
 				emit_line("\n\t\t\t),")
 	indent(2)
 	emit_line("}\n\t},")

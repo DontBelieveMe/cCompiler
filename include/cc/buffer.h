@@ -81,11 +81,11 @@ namespace cc
 			const int TYPE_SIZE = sizeof(T);
 
 			// todo (bwilks): need better handling here
-			assert(((m_ptr + TYPE_SIZE) - m_start) < static_cast<std::ptrdiff_t>(m_count));
+			assert(((m_ptr + TYPE_SIZE) - m_start) <= static_cast<std::ptrdiff_t>(m_count));
 
 			const T value = *(reinterpret_cast<T*>(m_ptr));
 
-return value;
+			return value;
 		}
 
 		bool SequenceEqualsString(const char* str);
