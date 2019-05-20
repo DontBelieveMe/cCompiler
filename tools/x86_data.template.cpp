@@ -29,6 +29,7 @@ for instruction in isa:
 			opcodes = []
 
 			instruction_size = 0
+			imm_dat_encoding = 0
 			for component in encoding.components:
 				if type(component) is x86.Opcode:
 					opcodes.append(component.byte)
@@ -43,6 +44,16 @@ for instruction in isa:
 
 				if type(component) is x86.Immediate:
 					instruction_size += component.size
+
+					im = component.value.type
+					assert(im == 'imm8' or im == 'imm16' or im == 'imm32')
+
+					if im == "imm8":
+						imm_dat_encoding = 1
+					elif im == "imm16":
+						imm_dat_encoding = 2
+					else:
+						imm_dat_encoding = 4
 
 				# TODO: Support other components that affect instruction size
 				#       e.g. SIB byte, Register Byte, CodeOffset Displacment etc...
@@ -74,7 +85,7 @@ for instruction in isa:
 					else:
 						emit("EX86Operand::{0},".format(t.capitalize()))
 
-				emit("}}, {0}, {1}".format(str(len(operands)), instruction_size))
+				emit("}}, {0}, {1}, {2}".format(str(len(operands)), instruction_size, imm_dat_encoding))
 				emit_line("\n\t\t\t),")
 	indent(2)
 	emit_line("}\n\t},")
