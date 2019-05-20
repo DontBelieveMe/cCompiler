@@ -10,19 +10,15 @@ namespace cc
 	enum EX86Instruction
 	{
 $(
-last_instruction_name = None
 global num_unique_instructions
 num_unique_instructions = 0
+
 for instruction in isa:
-	for form in instruction.forms:
-		if instruction.name != last_instruction_name:
-			inst_name = instruction.name.capitalize()
+	inst_name = instruction.name.capitalize()
+	indent(2)
+	emit_line("{0} = {1},".format(inst_name, num_unique_instructions))
 
-			indent(2)
-			emit_line("{0} = {1},".format(inst_name, num_unique_instructions))
-
-			num_unique_instructions += 1
-			last_instruction_name = instruction.name
+	num_unique_instructions += 1
 $)
 	};
 
